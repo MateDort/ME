@@ -64,9 +64,9 @@ SPOTIFY_REDIRECT_URI=http://127.0.0.1:3000/api/spotify/callback
 
 1. Add your Whoop credentials to `.env.local`:
 ```env
-WHOOP_CLIENT_ID=1fa2f22f-6867-446d-a9bc-a529b7baf2e4
+WHOOP_CLIENT_ID=
 WHOOP_CLIENT_SECRET=your_whoop_client_secret_here
-WHOOP_REDIRECT_URI=http://127.0.0.1:3000/api/whoop/callback
+WHOOP_REDIRECT_URI=
 ```
 
 2. Make sure the redirect URI matches exactly in your Whoop app settings:
