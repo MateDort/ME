@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
   const isPopup = isPopupFromState || isPopupFromCookie
   
   // Check if state matches (accounting for popup prefix)
-  const stateValue = isPopupFromState ? state.substring(6) : state
+  const stateValue = isPopupFromState && state ? state.substring(6) : state
   const storedStateValue = storedState?.startsWith('popup_') ? storedState.substring(6) : storedState
 
   if (!code || !state || stateValue !== storedStateValue) {

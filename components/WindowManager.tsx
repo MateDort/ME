@@ -8,10 +8,14 @@ import GoogleSearch from './apps/GoogleSearch'
 import NewsApp from './apps/NewsApp'
 import BrainstormApp from './apps/BrainstormApp'
 import HealthApp from './apps/HealthApp'
-import BuilderApp from './apps/BuilderApp'
 import AppLauncher from './apps/AppLauncher'
 import LanguageApp from './apps/LanguageApp'
 import PianoApp from './apps/PianoApp'
+import CalendarApp from './apps/CalendarApp'
+import MapsApp from './apps/MapsApp'
+import SkillShippingApp from './apps/SkillShippingApp'
+import NeuraNoteApp from './apps/NeuraNoteApp'
+import AIDoormanApp from './apps/AIDoormanApp'
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   messages: MessagesApp,
@@ -20,10 +24,14 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   news: NewsApp,
   brainstorm: BrainstormApp,
   health: HealthApp,
-  builder: BuilderApp,
   launcher: AppLauncher,
   language: LanguageApp,
   piano: PianoApp,
+  calendar: CalendarApp,
+  maps: MapsApp,
+  skillshipping: SkillShippingApp,
+  neuranote: NeuraNoteApp,
+  doorman: AIDoormanApp,
   blank: () => <div className="w-full h-full flex items-center justify-center text-gray-500">Empty Window</div>,
 }
 
@@ -45,4 +53,3 @@ export default function WindowManager() {
     </>
   )
 }
-

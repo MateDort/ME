@@ -33,6 +33,10 @@ export default function Window({ window, children }: WindowProps) {
     setActiveWindow(window.id)
   }
 
+  const handleTitleBarDoubleClick = () => {
+    updateWindow(window.id, { maximized: !window.maximized })
+  }
+
   useEffect(() => {
     if (!isDragging && !isResizing) return
 
@@ -50,7 +54,6 @@ export default function Window({ window, children }: WindowProps) {
         let newX = window.x
         let newY = window.y
 
-        // Handle corners (resize both dimensions)
         if (isResizing === 'top-left') {
           newWidth = Math.max(300, resizeStart.width - deltaX)
           newHeight = Math.max(200, resizeStart.height - deltaY)
@@ -68,7 +71,6 @@ export default function Window({ window, children }: WindowProps) {
           newWidth = Math.max(300, resizeStart.width + deltaX)
           newHeight = Math.max(200, resizeStart.height + deltaY)
         } else {
-          // Handle edges (single dimension)
           if (isResizing.includes('right')) {
             newWidth = Math.max(300, resizeStart.width + deltaX)
           }
@@ -126,50 +128,67 @@ export default function Window({ window, children }: WindowProps) {
 
   return (
     <motion.div
-      className="absolute bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/50 overflow-hidden"
+      className="absolute bg-white border-2 border-black shadow-[4px_4px_0_#000] overflow-hidden"
       style={{
         left: window.x,
-        top: window.maximized ? '32px' : `${window.y}px`,
+        top: window.maximized ? '28px' : `${window.y}px`,
         width: window.maximized ? '100%' : window.width,
-        height: window.maximized ? 'calc(100% - 32px)' : window.height,
+        height: window.maximized ? 'calc(100% - 28px)' : window.height,
         zIndex: window.zIndex,
       }}
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       onMouseDown={handleMouseDown}
       onClick={() => setActiveWindow(window.id)}
     >
-      {/* Title Bar */}
-      <div className="bg-gray-100/80 backdrop-blur-sm px-4 py-2 flex items-center cursor-move border-b border-gray-200">
-        <div className="flex gap-2 mr-4">
+      {/* Classic Mac Title Bar with stripes */}
+      <div 
+        className="bg-white px-2 py-1 cursor-move border-b-2 border-black relative"
+        onDoubleClick={handleTitleBarDoubleClick}
+      >
+        {/* Horizontal stripes pattern */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {[...Array(6)].map((_, i) => (
+            <div 
+              key={i} 
+              className="h-[2px] bg-black" 
+              style={{ marginTop: i === 0 ? '3px' : '2px' }}
+            />
+          ))}
+        </div>
+        
+        {/* Close box */}
+        <div className="flex items-center relative z-10">
           <button
             onClick={(e) => {
               e.stopPropagation()
               closeWindow(window.id)
             }}
-            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
-          />
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              updateWindow(window.id, { minimized: true })
-            }}
-            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors"
-          />
+            className="w-4 h-4 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center text-xs font-bold mr-2"
+          >
+            ×
+          </button>
+          
+          {/* Title with white background */}
+          <div className="flex-1 flex justify-center">
+            <span className="bg-white px-2 font-mono text-sm font-bold">{window.title}</span>
+          </div>
+          
+          {/* Zoom box */}
           <button
             onClick={(e) => {
               e.stopPropagation()
               updateWindow(window.id, { maximized: !window.maximized })
             }}
-            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
-          />
+            className="w-4 h-4 border-2 border-black bg-white hover:bg-black flex items-center justify-center"
+          >
+            <div className="w-2 h-2 border border-black" />
+          </button>
         </div>
-        <span className="flex-1 text-center text-sm font-medium text-gray-700">{window.title}</span>
-        <div className="w-16" /> {/* Spacer for balance */}
       </div>
 
       {/* Content */}
-      <div className="h-[calc(100%-40px)] overflow-auto bg-white">
+      <div className="h-[calc(100%-28px)] overflow-auto bg-[#f5f0e6]">
         {children}
       </div>
 
@@ -183,10 +202,19 @@ export default function Window({ window, children }: WindowProps) {
           <div className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
           <div className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
           <div className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-          <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+          {/* Classic Mac resize grip in bottom-right */}
+          <div 
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20" 
+            onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+          >
+            <svg className="w-full h-full" viewBox="0 0 16 16">
+              <line x1="4" y1="16" x2="16" y2="4" stroke="black" strokeWidth="1" />
+              <line x1="8" y1="16" x2="16" y2="8" stroke="black" strokeWidth="1" />
+              <line x1="12" y1="16" x2="16" y2="12" stroke="black" strokeWidth="1" />
+            </svg>
+          </div>
         </>
       )}
     </motion.div>
   )
 }
-

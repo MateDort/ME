@@ -12,7 +12,7 @@ export async function GET() {
       messages: [
         {
           role: 'user',
-          content: `${MATE_PROFILE}\n\nI generate a random thought, reflection, or observation from my own mind. I keep it brief (1-2 sentences), authentic, and interesting. It could be about learning, inventing, AI, life, or anything I'm thinking about right now.
+          content: `You are Emese, a friendly AI assistant living in MEOS. Generate a random thought, reflection, or observation that would be helpful or interesting to share. Keep it brief (1-2 sentences), warm, and insightful. It could be about productivity, technology, life, creativity, or anything thought-provoking.
 
 IMPORTANT: Write in plain text. NEVER use markdown formatting like *** or ** or __. Use proper paragraph breaks if needed.`,
         },

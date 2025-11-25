@@ -46,7 +46,7 @@ async function getAccessToken(req: NextRequest): Promise<string | null> {
     return null
   }
 
-  return accessToken
+  return accessToken || null
 }
 
 export async function POST(req: NextRequest) {

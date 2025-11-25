@@ -22,22 +22,19 @@ export default function CommandPalette() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Double press M (m+m) to open
       if (e.key === 'm' || e.key === 'M') {
         const now = Date.now()
         const timeSinceLastPress = now - lastKeyPressRef.current
         
-        // If pressed within 500ms of last M press, open palette
         if (timeSinceLastPress < 500 && timeSinceLastPress > 0) {
           e.preventDefault()
           setIsOpen(true)
           setTimeout(() => inputRef.current?.focus(), 100)
-          lastKeyPressRef.current = 0 // Reset
+          lastKeyPressRef.current = 0
         } else {
           lastKeyPressRef.current = now
         }
       } else {
-        // Reset if any other key is pressed
         lastKeyPressRef.current = 0
       }
       
@@ -73,7 +70,6 @@ export default function CommandPalette() {
       
       if (data.actions && data.actions.length > 0) {
         setActions(data.actions)
-        // Execute actions
         data.actions.forEach((action: Action) => {
           executeAction(action)
         })
@@ -91,7 +87,6 @@ export default function CommandPalette() {
   const executeAction = (action: Action) => {
     switch (action.type) {
       case 'music':
-        // Open music player
         addWindow({
           id: `music-${Date.now()}`,
           title: 'Music',
@@ -105,19 +100,6 @@ export default function CommandPalette() {
         })
         break
       case 'video':
-        // Open search with video
-        addWindow({
-          id: `search-${Date.now()}`,
-          title: 'Google',
-          component: 'search',
-          x: 100,
-          y: 100,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
-        break
       case 'search':
         addWindow({
           id: `search-${Date.now()}`,
@@ -160,7 +142,6 @@ export default function CommandPalette() {
     }
   }
 
-
   if (!isOpen) return null
 
   return (
@@ -169,7 +150,7 @@ export default function CommandPalette() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10001] flex items-start justify-center pt-32"
+        className="fixed inset-0 bg-black/40 z-[10001] flex items-start justify-center pt-32"
         onClick={() => {
           setIsOpen(false)
           setInput('')
@@ -181,33 +162,37 @@ export default function CommandPalette() {
           initial={{ scale: 0.95, opacity: 0, y: -20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: -20 }}
-          className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-white/50"
+          className="bg-white border-2 border-black shadow-[4px_4px_0_#000] w-full max-w-xl mx-4 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
+          {/* Classic Mac dialog header */}
+          <div className="bg-white border-b-2 border-black px-3 py-2 flex items-center">
+            <div className="flex-1 text-center font-mono font-bold text-sm">
+              ✨ Ask Emese
+            </div>
+          </div>
+
           {/* Input */}
-          <div className="p-4">
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">💭</span>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                  placeholder="What's on your mind?"
-                  className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-lg"
-                />
-              </div>
+          <div className="p-4 bg-[#e8e8e8]">
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                placeholder="What's on your mind?"
+                className="flex-1 px-3 py-2 bg-white border-2 border-black font-mono text-sm shadow-[2px_2px_0_#000] focus:outline-none"
+              />
               <button
                 onClick={handleSubmit}
                 disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-2 bg-black text-white font-mono text-sm font-bold shadow-[2px_2px_0_#666] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0_#666] transition-all disabled:opacity-50"
               >
-                {isLoading ? '⟳' : '→'}
+                {isLoading ? '...' : 'Ask'}
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-2 text-center">Press M+M to open • Esc to close</p>
+            <p className="font-mono text-xs text-[#666] mt-2 text-center">Press M+M to open • Esc to close</p>
           </div>
 
           {/* Response */}
@@ -215,21 +200,19 @@ export default function CommandPalette() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="px-4 pb-4"
+              className="p-4 bg-white border-t-2 border-black"
             >
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div
-                  className="text-gray-700 leading-relaxed [&_strong]:font-semibold [&_strong]:text-gray-900 [&_p]:mb-2 [&_p:last-child]:mb-0"
-                  dangerouslySetInnerHTML={{ __html: formatResponse(response) }}
-                />
-              </div>
+              <div
+                className="font-mono text-sm leading-relaxed [&_strong]:font-bold [&_p]:mb-2 [&_p:last-child]:mb-0"
+                dangerouslySetInnerHTML={{ __html: formatResponse(response) }}
+              />
             </motion.div>
           )}
 
           {isLoading && (
-            <div className="text-center py-4">
+            <div className="text-center py-4 bg-white border-t-2 border-black">
               <div className="inline-block animate-spin text-2xl">⏳</div>
-              <p className="text-gray-500 mt-2 text-sm">Thinking...</p>
+              <p className="font-mono text-xs text-[#666] mt-2">Thinking...</p>
             </div>
           )}
         </motion.div>
@@ -237,4 +220,3 @@ export default function CommandPalette() {
     </AnimatePresence>
   )
 }
-

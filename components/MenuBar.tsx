@@ -11,7 +11,7 @@ interface MenuBarProps {
 export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState('')
-  const { windows, addWindow } = useOSStore()
+  const { addWindow } = useOSStore()
   const menuRef = useRef<HTMLDivElement>(null)
 
   // Update clock
@@ -87,7 +87,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     setActiveMenu(activeMenu === menu ? null : menu)
   }
 
-  const handleMenuItemClick = (item: any) => {
+  const handleMenuItemClick = (item: { label: string; action?: () => void }) => {
     if (item.action) {
       item.action()
     }
@@ -95,19 +95,19 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   }
 
   return (
-    <div ref={menuRef} className="fixed top-0 left-0 right-0 h-8 bg-white/80 backdrop-blur-sm border-b border-gray-300 z-50 flex items-center text-gray-800 text-sm font-medium shadow-sm">
+    <div ref={menuRef} className="fixed top-0 left-0 right-0 h-7 bg-white border-b-2 border-black z-50 flex items-center font-mono text-sm">
       {/* Apple Logo */}
       <button
         onClick={() => handleMenuClick('apple')}
-        className="px-3 h-full hover:bg-black/5 flex items-center"
+        className={`px-3 h-full hover:bg-black hover:text-white flex items-center ${activeMenu === 'apple' ? 'bg-black text-white' : ''}`}
       >
-        <span className="text-lg">🍎</span>
+        <span className="text-base">🍎</span>
       </button>
 
       {/* File Menu */}
       <button
         onClick={() => handleMenuClick('file')}
-        className={`px-3 h-full hover:bg-black/5 ${activeMenu === 'file' ? 'bg-black/10' : ''}`}
+        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'file' ? 'bg-black text-white' : ''}`}
       >
         File
       </button>
@@ -115,7 +115,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       {/* Edit Menu */}
       <button
         onClick={() => handleMenuClick('edit')}
-        className={`px-3 h-full hover:bg-black/5 ${activeMenu === 'edit' ? 'bg-black/10' : ''}`}
+        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'edit' ? 'bg-black text-white' : ''}`}
       >
         Edit
       </button>
@@ -123,7 +123,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       {/* Help Menu */}
       <button
         onClick={() => handleMenuClick('help')}
-        className={`px-3 h-full hover:bg-black/5 ${activeMenu === 'help' ? 'bg-black/10' : ''}`}
+        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'help' ? 'bg-black text-white' : ''}`}
       >
         Help
       </button>
@@ -132,31 +132,32 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       <div className="flex-1" />
 
       {/* Right side: Time icon and clock */}
-      <div className="flex items-center px-3 gap-2 text-gray-600">
-        <span className="text-lg">{timeIcon}</span>
-        <span className="font-mono text-xs">{currentTime}</span>
+      <div className="flex items-center px-3 gap-2">
+        <span className="text-base">{timeIcon}</span>
+        <span className="font-mono text-xs font-bold">{currentTime}</span>
       </div>
 
       {/* Dropdown Menus */}
       <AnimatePresence>
         {activeMenu && menuItems[activeMenu as keyof typeof menuItems] && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-8 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg min-w-[200px] py-1 rounded-md"
-            style={{ left: activeMenu === 'apple' ? '0' : activeMenu === 'file' ? '40px' : activeMenu === 'edit' ? '90px' : '140px' }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.1 }}
+            className="absolute top-7 bg-white border-2 border-black shadow-[4px_4px_0_#000] min-w-[180px] py-1"
+            style={{ left: activeMenu === 'apple' ? '0' : activeMenu === 'file' ? '40px' : activeMenu === 'edit' ? '85px' : '128px' }}
             onMouseLeave={() => setActiveMenu(null)}
           >
             {menuItems[activeMenu as keyof typeof menuItems].map((item, index) => {
               if (item.label === '---') {
-                return <div key={index} className="h-px bg-gray-200 my-1" />
+                return <div key={index} className="h-px bg-black my-1 mx-2" />
               }
               return (
                 <button
                   key={index}
                   onClick={() => handleMenuItemClick(item)}
-                  className="w-full text-left px-4 py-1.5 hover:bg-blue-500 hover:text-white text-gray-800 text-sm"
+                  className="w-full text-left px-4 py-1 hover:bg-black hover:text-white font-mono text-sm"
                 >
                   {item.label}
                 </button>
@@ -168,4 +169,3 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     </div>
   )
 }
-

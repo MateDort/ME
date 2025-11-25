@@ -14,10 +14,10 @@ type TimeOfDay = 'morning' | 'midday' | 'afternoon' | 'night'
 
 function getTimeOfDay(): TimeOfDay {
   const hour = new Date().getHours()
-  if (hour >= 5 && hour < 10) return 'morning'      // 5am - 10am: Sunrise
-  if (hour >= 10 && hour < 17) return 'midday'      // 10am - 5pm: Sunny
-  if (hour >= 17 && hour < 21) return 'afternoon'   // 5pm - 9pm: Sunset
-  return 'night'                                     // 9pm - 5am: Night
+  if (hour >= 5 && hour < 10) return 'morning'
+  if (hour >= 10 && hour < 17) return 'midday'
+  if (hour >= 17 && hour < 21) return 'afternoon'
+  return 'night'
 }
 
 // Check if screen should be locked (7:30 PM to 5:00 AM)
@@ -27,22 +27,14 @@ function isScreenLocked(): boolean {
   const minutes = now.getMinutes()
   const currentMinutes = hours * 60 + minutes
   
-  const lockStart = 19 * 60 + 30  // 7:30 PM = 19:30 = 1170 minutes
-  const lockEnd = 5 * 60          // 5:00 AM = 300 minutes
+  const lockStart = 19 * 60 + 30
+  const lockEnd = 5 * 60
   
-  // Locked if after 7:30 PM OR before 5:00 AM
   return currentMinutes >= lockStart || currentMinutes < lockEnd
 }
 
 function getUnlockTime(): string {
   return '5:00 AM'
-}
-
-const timeBackgrounds: Record<TimeOfDay, string> = {
-  morning: 'bg-gradient-to-b from-rose-300 via-orange-200 to-yellow-100',    // Sunrise colors
-  midday: 'bg-gradient-to-b from-yellow-200 via-amber-200 to-orange-200',    // Sunny colors
-  afternoon: 'bg-gradient-to-b from-orange-300 via-rose-400 to-purple-500',  // Sunset colors
-  night: 'bg-gradient-to-b from-slate-900 via-indigo-900 to-slate-800',      // Night colors
 }
 
 const timeIcons: Record<TimeOfDay, string> = {
@@ -58,7 +50,6 @@ export default function OSDesktop() {
   const [isLocked, setIsLocked] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
 
-  // Update time of day and lock status on mount and every minute
   useEffect(() => {
     const updateTime = () => {
       setTimeOfDay(getTimeOfDay())
@@ -71,23 +62,22 @@ export default function OSDesktop() {
     }
     
     updateTime()
-    const interval = setInterval(updateTime, 1000) // Check every second for more responsive lock
+    const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    // Random notifications from ME agent - between 10 minutes and 1 hour
     const scheduleNotification = () => {
-      const delay = Math.random() * 3000000 + 600000 // 10 minutes to 1 hour (600000ms to 3600000ms)
+      const delay = Math.random() * 3000000 + 600000
       setTimeout(async () => {
         const thought = await getMEAgentThought()
         addNotification({
           id: Date.now().toString(),
-          title: 'Thought from Máté',
+          title: 'Thought from Emese',
           message: thought,
           timestamp: new Date(),
         })
-        scheduleNotification() // Schedule next one
+        scheduleNotification()
       }, delay)
     }
 
@@ -97,13 +87,12 @@ export default function OSDesktop() {
   // Screen lock overlay
   if (isLocked) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-black flex items-center justify-center">
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="text-center px-8"
         >
-          {/* Moon icon */}
           <motion.div
             animate={{ 
               y: [0, -10, 0],
@@ -119,27 +108,24 @@ export default function OSDesktop() {
             🌙
           </motion.div>
           
-          {/* Lock message */}
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-mono font-bold text-white mb-4">
             No Screens After 7:30 PM
           </h1>
           
-          <p className="text-xl text-slate-400 mb-8">
+          <p className="text-xl font-mono text-gray-400 mb-8">
             Time to rest. MEOS is locked until {getUnlockTime()}.
           </p>
           
-          {/* Current time */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl px-8 py-4 inline-block border border-slate-700">
-            <p className="text-sm text-slate-500 mb-1">Current Time</p>
-            <p className="text-3xl font-mono text-white">{currentTime}</p>
+          <div className="bg-white border-2 border-white px-8 py-4 inline-block">
+            <p className="font-mono text-xs text-gray-500 mb-1">Current Time</p>
+            <p className="text-3xl font-mono text-black">{currentTime}</p>
           </div>
           
-          {/* Stars animation */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(50)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-white rounded-full"
+                className="absolute w-1 h-1 bg-white"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -157,8 +143,7 @@ export default function OSDesktop() {
             ))}
           </div>
           
-          {/* Motivational message */}
-          <p className="text-slate-500 mt-8 text-sm">
+          <p className="font-mono text-gray-500 mt-8 text-sm">
             💤 Good sleep = better thinking tomorrow
           </p>
         </motion.div>
@@ -167,9 +152,49 @@ export default function OSDesktop() {
   }
 
   return (
-    <div className={`fixed inset-0 transition-colors duration-1000 ${timeBackgrounds[timeOfDay]}`}>
+    <div className="fixed inset-0 bg-[#a8a8a8]">
+      {/* Classic Mac desktop pattern */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 1px,
+              #b0b0b0 1px,
+              #b0b0b0 2px
+            ),
+            repeating-linear-gradient(
+              90deg,
+              transparent,
+              transparent 1px,
+              #b0b0b0 1px,
+              #b0b0b0 2px
+            )
+          `,
+          backgroundSize: '4px 4px',
+        }}
+      />
+      
+      {/* Desktop icons area */}
+      <div className="absolute top-10 right-4 flex flex-col gap-2">
+        <div className="flex flex-col items-center cursor-pointer hover:opacity-80">
+          <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-2xl shadow-[2px_2px_0_#000]">
+            💾
+          </div>
+          <span className="font-mono text-xs mt-1 bg-white px-1">Macintosh HD</span>
+        </div>
+        <div className="flex flex-col items-center cursor-pointer hover:opacity-80">
+          <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-2xl shadow-[2px_2px_0_#000]">
+            🗑️
+          </div>
+          <span className="font-mono text-xs mt-1 bg-white px-1">Trash</span>
+        </div>
+      </div>
+      
       <MenuBar timeIcon={timeIcons[timeOfDay]} />
-      <div className="pt-8">
+      <div className="pt-7">
         <WindowManager />
       </div>
       <Dock />
@@ -178,4 +203,3 @@ export default function OSDesktop() {
     </div>
   )
 }
-

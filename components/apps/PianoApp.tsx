@@ -84,7 +84,7 @@ export default function PianoApp() {
     }
     
     // Resume if suspended
-    if (audioContextRef.current.state === 'suspended') {
+    if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
       try {
         await audioContextRef.current.resume()
         setAudioEnabled(true)
@@ -93,6 +93,8 @@ export default function PianoApp() {
         return
       }
     }
+    
+    if (!audioContextRef.current) return
     
     // Stop existing note if playing
     if (oscillatorsRef.current.has(key.note)) {
@@ -169,7 +171,7 @@ export default function PianoApp() {
         if (!activeKeysRef.current.has(pianoKey.note)) {
           activeKeysRef.current.add(pianoKey.note)
           playNote(pianoKey)
-          setPressedKeys(prev => new Set([...prev, pianoKey.note]))
+          setPressedKeys(prev => new Set([...Array.from(prev), pianoKey.note]))
         }
       }
     }
@@ -246,7 +248,7 @@ export default function PianoApp() {
     } else {
       activeKeysRef.current.add(key.note)
       await playNote(key)
-      setPressedKeys(prev => new Set([...prev, key.note]))
+      setPressedKeys(prev => new Set([...Array.from(prev), key.note]))
     }
   }, [audioEnabled, initAudioContext, playNote, stopNote])
 

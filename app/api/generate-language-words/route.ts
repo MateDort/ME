@@ -70,7 +70,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ words })
   } catch (error) {
-    return handleClaudeError(error, 'Language words API')
+    const errorInfo = handleClaudeError(error)
+    return NextResponse.json({ error: errorInfo.message }, { status: 500 })
   }
 }
 

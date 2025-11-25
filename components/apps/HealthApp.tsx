@@ -14,7 +14,7 @@ interface HealthMetric {
     avg: number
   }
   // Extended data
-  recovery?: {
+  recoveryDetails?: {
     score: number
     restingHeartRate: number
     hrv: number
@@ -23,7 +23,7 @@ interface HealthMetric {
     state: string
     recoveryRate: number
   }
-  cycle?: {
+  cycleDetails?: {
     strain: number
     kilojoule: number
     averageHeartRate: number
@@ -35,7 +35,7 @@ interface HealthMetric {
     zoneFourDuration: number
     zoneFiveDuration: number
   }
-  sleep?: {
+  sleepDetails?: {
     totalSleepTimeMs: number
     totalSleepTimeHours: number
     sleepNeedFromSleepDebt: number
@@ -421,11 +421,11 @@ export default function HealthApp() {
                             {metric.sleep.toFixed(1)}H
                           </span>
                         </div>
-                        {metric.recovery?.hrv && (
+                        {metric.recoveryDetails?.hrv && (
                           <div className="flex justify-between items-center">
                             <span className="text-xs font-bold text-amber-200">HRV:</span>
                             <span className="text-sm font-bold text-purple-400">
-                              {Math.round(metric.recovery.hrv)}ms
+                              {Math.round(metric.recoveryDetails.hrv)}ms
                             </span>
                           </div>
                         )}
