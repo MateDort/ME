@@ -9,58 +9,57 @@
 }
 
 body {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
-  background: #a8a8a8;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Classic Mac-style bold text */
+/* macOS-style bold text */
 strong {
-  font-weight: bold;
+  font-weight: 600;
   font-family: inherit;
 }
 
-/* Classic Mac scrollbars */
+/* macOS-style scrollbars */
 ::-webkit-scrollbar {
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #e8e8e8;
-  border-left: 1px solid #000;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #fff;
-  border: 1px solid #000;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #d0d0d0;
-}
-
-::-webkit-scrollbar-button {
-  background: #e8e8e8;
-  border: 1px solid #000;
-  height: 16px;
+  background: rgba(0, 0, 0, 0.3);
 }
 
 ::-webkit-scrollbar-corner {
-  background: #e8e8e8;
-  border: 1px solid #000;
+  background: transparent;
 }
 
-/* Classic Mac selection */
+/* macOS-style selection */
 ::selection {
-  background: #000;
-  color: #fff;
+  background: rgba(0, 122, 255, 0.3);
+  color: inherit;
 }
 
-/* Font imports for retro feel */
-@font-face {
-  font-family: 'Chicago';
-  src: local('Monaco'), local('Menlo'), local('Courier New');
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Disable transitions for elements that shouldn't have them */
+input, textarea, button {
+  transition-duration: 0ms;
 }

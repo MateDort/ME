@@ -124,9 +124,9 @@ export default function BrainstormApp() {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Courier New', monospace;
-      background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
-      color: #00ff00;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -135,69 +135,43 @@ export default function BrainstormApp() {
     }
     .container {
       text-align: center;
-      max-width: 800px;
-      background: rgba(0, 20, 0, 0.8);
-      padding: 60px 40px;
-      border: 3px solid #00ff00;
-      box-shadow: 0 0 30px rgba(0, 255, 0, 0.3), inset 0 0 30px rgba(0, 255, 0, 0.1);
-      border-radius: 10px;
+      max-width: 600px;
     }
     h1 {
-      font-size: 3.5rem;
-      margin-bottom: 30px;
-      text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
-    @keyframes glow {
-      from { text-shadow: 0 0 20px #00ff00, 0 0 40px #00ff00; }
-      to { text-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00, 0 0 80px #00ff00; }
+      font-size: 3rem;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #e94560, #0f3460);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     p {
-      font-size: 1.3rem;
-      line-height: 2;
-      margin-bottom: 20px;
-      opacity: 0.9;
-    }
-    .instructions {
-      margin-top: 40px;
-      padding: 20px;
-      border: 1px solid #00ff00;
-      border-radius: 5px;
-      text-align: left;
-      background: rgba(0, 255, 0, 0.05);
-    }
-    .instructions h2 {
       font-size: 1.2rem;
-      margin-bottom: 15px;
-      color: #00ff00;
+      line-height: 1.8;
+      opacity: 0.9;
+      margin-bottom: 30px;
     }
-    .instructions li {
-      margin-bottom: 10px;
-      padding-left: 20px;
-      position: relative;
+    .features {
+      display: grid;
+      gap: 15px;
+      text-align: left;
     }
-    .instructions li::before {
-      content: '>';
-      position: absolute;
-      left: 0;
-      color: #00ff00;
+    .feature {
+      background: rgba(255,255,255,0.1);
+      padding: 15px 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(10px);
     }
+    .feature strong { color: #e94560; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>💡 BRAINSTORM</h1>
-    <p>Your AI-Powered Development Environment</p>
-    <p>1970s Terminal Aesthetic • Modern AI Power</p>
-    <div class="instructions">
-      <h2>HOW TO USE:</h2>
-      <ul>
-        <li>Type what you want to build in the chat (e.g. "Build a snake game")</li>
-        <li>Watch the AI think and create files in real-time</li>
-        <li>Edit files by clicking on them in the left panel</li>
-        <li>Ask questions in ASK mode or build things in AGENT mode</li>
-        <li>Switch between models using the dropdown</li>
-      </ul>
+    <h1>💡 Brainstorm</h1>
+    <p>Your AI-powered development environment. Build anything with natural language.</p>
+    <div class="features">
+      <div class="feature"><strong>Agent Mode:</strong> Build and edit code automatically</div>
+      <div class="feature"><strong>Ask Mode:</strong> Get answers about your code</div>
+      <div class="feature"><strong>Live Preview:</strong> See changes in real-time</div>
     </div>
   </div>
 </body>
@@ -257,34 +231,25 @@ export default function BrainstormApp() {
     if (!editingMessageId || !editingText.trim()) return
     if (isGenerating) return
 
-    // Find the message index
     const messageIndex = chatMessages.findIndex(m => m.id === editingMessageId)
     if (messageIndex === -1) return
 
-    // Get the original message to preserve image if any
     const originalMessage = chatMessages[messageIndex]
-
-    // Remove all messages after this one (including this one)
     const messagesBeforeEdit = chatMessages.slice(0, messageIndex)
     setChatMessages(messagesBeforeEdit)
 
-    // Reset editing state
     setEditingMessageId(null)
     setEditingText('')
-
-    // Set the input to the edited text and submit
     setChatInput(editingText)
     if (originalMessage.image) {
       setUploadedImage(originalMessage.image)
     }
 
-    // Small delay to let state update, then trigger send
     setTimeout(() => {
       handleSendMessageWithText(editingText, originalMessage.image)
     }, 50)
   }
 
-  // Helper to send message with specific text
   const handleSendMessageWithText = async (text: string, image?: string) => {
     if (!text.trim() && !image) return
     if (isGenerating) return
@@ -365,7 +330,6 @@ export default function BrainstormApp() {
   }
 
   const handleAgentMode = async (prompt: string, image?: string) => {
-    // Check if this is an edit request for existing project
     const isEditRequest = selectedProject && selectedProject.id !== 'welcome' && 
       (prompt.toLowerCase().includes('change') || 
        prompt.toLowerCase().includes('edit') || 
@@ -375,19 +339,16 @@ export default function BrainstormApp() {
        prompt.toLowerCase().includes('replace'))
 
     if (isEditRequest && selectedProject) {
-      // Edit existing files
       await handleEditFiles(prompt, image)
     } else if (!selectedProject || selectedProject.id === 'welcome') {
-      // Create new project
       await handleCreateProject(prompt)
     } else {
-      // Add to existing project or create new file
       await handleEditFiles(prompt, image)
     }
   }
 
   const handleCreateProject = async (prompt: string) => {
-    showThought(`Analyzing your request... (using ${formatModelName(model)})`, undefined, 'thinking')
+    showThought(`Analyzing your request...`, undefined, 'thinking')
     await new Promise(r => setTimeout(r, 500))
     
     showThought('Creating project plan and file structure...', undefined, 'thinking')
@@ -415,29 +376,26 @@ export default function BrainstormApp() {
         createdAt: new Date(),
       }
 
-      // Remove welcome project if it exists
       setProjects((prev) => prev.filter(p => p.id !== 'welcome').concat(newProject))
       setSelectedProject(newProject)
 
-      // Show project created message
       const planMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        text: `📋 Creating: ${newProject.name}\nModel: ${formatModelName(model)}\n\nFiles to generate:\n${newProject.files.map(f => `• ${f.path}`).join('\n')}`,
+        text: `📋 Creating: ${newProject.name}\n\nFiles to generate:\n${newProject.files.map(f => `• ${f.path}`).join('\n')}`,
         sender: 'system',
         timestamp: new Date(),
       }
       setChatMessages((prev) => [...prev, planMessage])
 
-      // Generate each file
       const editedFiles: string[] = []
       for (let i = 0; i < newProject.files.length; i++) {
         const file = newProject.files[i]
         const todo = newProject.todos[i] || { task: `Create ${file.path}` }
 
-        showThought(`I need to create ${file.path}...`, file.path, 'thinking')
+        showThought(`Creating ${file.path}...`, file.path, 'thinking')
         await new Promise(r => setTimeout(r, 800))
 
-        showThought(`Writing ${file.type} code for ${file.path}... (${formatModelName(model)})`, file.path, 'editing')
+        showThought(`Writing code for ${file.path}...`, file.path, 'editing')
 
         try {
           const fileResponse = await fetch('/api/generate-file', {
@@ -458,7 +416,6 @@ export default function BrainstormApp() {
           const fileData = await fileResponse.json()
           const content = fileData.code || `// Error generating ${file.path}`
 
-          // Update project with new file content
           setProjects((prev) => {
             const updated = prev.map((p) => {
               if (p.id === newProject.id) {
@@ -488,11 +445,10 @@ export default function BrainstormApp() {
         }
       }
 
-      // Show completion message
       clearThought()
       const doneMessage: ChatMessage = {
         id: `done-${Date.now()}`,
-        text: `✅ Project complete! (${formatModelName(model)})\n\nFiles created:`,
+        text: `✅ Project complete!\n\nFiles created:`,
         sender: 'agent',
         timestamp: new Date(),
         editedFiles,
@@ -505,15 +461,14 @@ export default function BrainstormApp() {
   const handleEditFiles = async (prompt: string, image?: string) => {
     if (!selectedProject) return
 
-    showThought(`Reading your files... (using ${formatModelName(model)})`, undefined, 'thinking')
+    showThought(`Reading your files...`, undefined, 'thinking')
     await new Promise(r => setTimeout(r, 500))
 
-    showThought('Planning what changes to make...', undefined, 'thinking')
+    showThought('Planning changes...', undefined, 'thinking')
     await new Promise(r => setTimeout(r, 500))
 
     const imageData = image ? await convertImageToBase64(image) : null
 
-    // Determine which files need to be edited
     const filesToEdit = selectedFile 
       ? [selectedProject.files.find(f => f.path === selectedFile)!]
       : selectedProject.files.filter(f => f.content)
@@ -521,7 +476,7 @@ export default function BrainstormApp() {
     const editedFiles: string[] = []
 
     for (const file of filesToEdit) {
-      showThought(`I need to edit ${file.path} to ${prompt.substring(0, 50)}...`, file.path, 'thinking')
+      showThought(`Editing ${file.path}...`, file.path, 'thinking')
       await new Promise(r => setTimeout(r, 500))
 
       showThought(`Making changes to ${file.path}...`, file.path, 'editing')
@@ -546,7 +501,6 @@ export default function BrainstormApp() {
 
         const data = await response.json()
         if (data.response) {
-          // Update file content
           setProjects((prev) => {
             const updated = prev.map((p) => {
               if (p.id === selectedProject.id) {
@@ -573,12 +527,11 @@ export default function BrainstormApp() {
       }
     }
 
-    // Show completion
     clearThought()
     if (editedFiles.length > 0) {
       const doneMessage: ChatMessage = {
         id: `done-${Date.now()}`,
-        text: `✅ Changes complete! (${formatModelName(model)})`,
+        text: `✅ Changes complete!`,
         sender: 'agent',
         timestamp: new Date(),
         editedFiles,
@@ -588,7 +541,7 @@ export default function BrainstormApp() {
     } else {
       const noEditMessage: ChatMessage = {
         id: `noedit-${Date.now()}`,
-        text: `Could not make the requested changes with ${formatModelName(model)}. Please try rephrasing or try a different model.`,
+        text: `Could not make the requested changes. Please try rephrasing.`,
         sender: 'agent',
         timestamp: new Date(),
       }
@@ -597,10 +550,10 @@ export default function BrainstormApp() {
   }
 
   const handleAskMode = async (prompt: string, image?: string) => {
-    showThought(`Reading your files... (${formatModelName(model)})`, undefined, 'thinking')
+    showThought(`Reading your files...`, undefined, 'thinking')
     await new Promise(r => setTimeout(r, 300))
 
-    showThought('Thinking about your question...', undefined, 'thinking')
+    showThought('Thinking...', undefined, 'thinking')
 
     const imageData = image ? await convertImageToBase64(image) : null
 
@@ -668,9 +621,8 @@ export default function BrainstormApp() {
     })
   }
 
-  // Compute preview HTML using useMemo to avoid cross-origin issues
   const previewSrcdoc = useMemo(() => {
-    if (!selectedProject) return '<html><body style="background:#000;color:#0f0;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;"><p>No preview available</p></body></html>'
+    if (!selectedProject) return '<html><body style="background:#1a1a2e;color:white;font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;"><p>No preview available</p></body></html>'
 
     const htmlFile = selectedProject.files.find((f) => f.type === 'html' || f.path.endsWith('.html'))
     const cssFile = selectedProject.files.find((f) => f.type === 'css' || f.path.endsWith('.css'))
@@ -698,10 +650,8 @@ export default function BrainstormApp() {
       }
     }
 
-    // Add navigation blocking script to prevent iframe from loading parent
     const navigationBlocker = `
       <script>
-        // Block all navigation attempts
         document.addEventListener('click', function(e) {
           var target = e.target;
           while (target && target.tagName !== 'A') {
@@ -709,21 +659,16 @@ export default function BrainstormApp() {
           }
           if (target && target.tagName === 'A' && target.href) {
             e.preventDefault();
-            console.log('Navigation blocked:', target.href);
           }
         }, true);
-        
-        // Prevent form submissions from navigating
         document.addEventListener('submit', function(e) {
           if (!e.defaultPrevented) {
             e.preventDefault();
-            console.log('Form submission - handle with JavaScript');
           }
         }, true);
       </script>
     `;
 
-    // Inject navigation blocker before </body> or at the end
     let safeHTML = finalHTML
     if (safeHTML.includes('</body>')) {
       safeHTML = safeHTML.replace('</body>', navigationBlocker + '</body>')
@@ -733,7 +678,7 @@ export default function BrainstormApp() {
       safeHTML = safeHTML + navigationBlocker
     }
 
-    return safeHTML || '<html><body style="background:#000;color:#0f0;font-family:monospace;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;"><p>No preview available</p></body></html>'
+    return safeHTML || '<html><body style="background:#1a1a2e;color:white;font-family:system-ui;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;"><p>No preview available</p></body></html>'
   }, [selectedProject?.files, selectedProject?.id])
 
   const handleFileSelect = (filePath: string) => {
@@ -748,81 +693,80 @@ export default function BrainstormApp() {
 
   const currentFileContent = selectedProject?.files.find((f) => f.path === selectedFile)?.content || ''
 
-  // Format model name for display
   const formatModelName = (m: string) => {
     if (m.includes('claude')) {
       return m.replace('claude-3-', '').replace('claude-3.5-', '3.5-').replace('-20240307', '').replace('-20240229', '').replace('-20241022', '')
     }
-    return m.replace('gemini-', '').replace('1.5-', '1.5 ').replace('-latest', ' ✓')
+    return m.replace('gemini-', '').replace('1.5-', '1.5 ').replace('-latest', '')
   }
 
   return (
-    <div className="h-full flex bg-black text-green-400" style={{ fontFamily: 'monospace' }}>
+    <div className="h-full flex bg-[#1e1e1e] text-gray-200" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
       {/* Left: Files Panel */}
-      <div className="w-56 bg-black border-r-2 border-green-600 flex flex-col">
-        <div className="bg-green-600 text-black px-3 py-2 border-b-2 border-green-800">
-          <h2 className="font-bold text-sm">FILES</h2>
+      <div className="w-52 bg-[#252526] border-r border-[#3c3c3c] flex flex-col">
+        <div className="px-3 py-2 text-xs text-gray-400 uppercase tracking-wider font-medium border-b border-[#3c3c3c]">
+          Files
         </div>
         <div className="flex-1 overflow-y-auto p-2">
           {selectedProject ? (
-            <div className="space-y-1">
-              <div className="text-xs text-green-300 mb-2 px-1 font-bold">
-                {selectedProject.name.toUpperCase()}
+            <div className="space-y-0.5">
+              <div className="text-xs text-gray-500 mb-2 px-2 font-medium">
+                {selectedProject.name}
               </div>
               {selectedProject.files.map((file) => (
                 <button
                   key={file.path}
                   onClick={() => handleFileSelect(file.path)}
-                  className={`w-full text-left px-2 py-1.5 rounded text-xs border ${
+                  className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${
                     selectedFile === file.path
-                      ? 'bg-green-900/60 text-green-300 border-green-500'
-                      : 'bg-gray-900/20 text-gray-400 border-gray-700 hover:bg-gray-800/40 hover:border-gray-600'
+                      ? 'bg-[#37373d] text-white'
+                      : 'text-gray-400 hover:bg-[#2a2d2e]'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono truncate">{file.path}</span>
-                    <span className="flex-shrink-0">
-                      {file.content && file.edited && (
-                        <span className="text-green-400">✓</span>
-                      )}
-                      {file.content && !file.edited && (
-                        <span className="text-gray-500">•</span>
-                      )}
-                    </span>
-                  </div>
+                  <span className="text-xs opacity-60">
+                    {file.type === 'html' ? '📄' : file.type === 'css' ? '🎨' : file.type === 'javascript' ? '📜' : '📁'}
+                  </span>
+                  <span className="truncate flex-1">{file.path}</span>
+                  {file.content && file.edited && (
+                    <span className="text-green-400 text-xs">✓</span>
+                  )}
                 </button>
               ))}
               <button
                 onClick={() => setSelectedFile(null)}
-                className={`w-full text-center px-2 py-1.5 mt-2 rounded text-xs border ${
+                className={`w-full text-left px-2 py-1 mt-2 rounded text-sm flex items-center gap-2 ${
                   selectedFile === null
-                    ? 'bg-green-900/60 text-green-300 border-green-500'
-                    : 'bg-gray-900/20 text-gray-400 border-gray-700 hover:bg-gray-800/40 hover:border-gray-600'
+                    ? 'bg-[#37373d] text-white'
+                    : 'text-gray-400 hover:bg-[#2a2d2e]'
                 }`}
               >
-                [PREVIEW]
+                <span className="text-xs">▶️</span>
+                <span>Preview</span>
               </button>
             </div>
           ) : (
-            <div className="text-center text-gray-600 py-8 text-xs">
-              NO PROJECT
+            <div className="text-center text-gray-600 py-8 text-sm">
+              No project
             </div>
           )}
         </div>
       </div>
 
       {/* Middle: Preview/Editor */}
-      <div className="flex-1 flex flex-col bg-black">
-        <div className="bg-green-600 text-black px-3 py-2 border-b-2 border-green-800 flex items-center justify-between">
-          <h3 className="font-bold text-sm">
-            {selectedFile ? selectedFile.toUpperCase() : 'PREVIEW'}
-          </h3>
+      <div className="flex-1 flex flex-col bg-[#1e1e1e]">
+        <div className="bg-[#2d2d2d] px-4 py-1.5 border-b border-[#3c3c3c] flex items-center gap-2">
+          <span className="text-sm text-gray-300">
+            {selectedFile || 'Preview'}
+          </span>
+          {!selectedFile && (
+            <span className="text-xs text-gray-500 bg-[#3c3c3c] px-2 py-0.5 rounded">Live</span>
+          )}
         </div>
         {selectedFile ? (
           <textarea
             value={currentFileContent}
             onChange={(e) => handleFileEdit(e.target.value)}
-            className="flex-1 w-full p-4 bg-black text-green-400 font-mono text-sm resize-none focus:outline-none border-0"
+            className="flex-1 w-full p-4 bg-[#1e1e1e] text-gray-200 font-mono text-sm resize-none focus:outline-none border-0"
             spellCheck={false}
             placeholder="// Start typing..."
           />
@@ -838,70 +782,15 @@ export default function BrainstormApp() {
       </div>
 
       {/* Right: Chat Panel */}
-      <div className="w-80 bg-black border-l-2 border-green-600 flex flex-col">
-        <div className="bg-green-600 text-black px-3 py-2 border-b-2 border-green-800">
-          <h2 className="font-bold text-sm">CHAT</h2>
-        </div>
-
-        {/* Controls */}
-        <div className="p-2 border-b border-green-800 space-y-2 bg-green-900/10">
-          <div className="flex gap-2">
-            <select
-              value={mode}
-              onChange={(e) => {
-                const newMode = e.target.value as Mode
-                setMode(newMode)
-                setModel(newMode === 'agent' ? DEFAULT_AGENT_MODEL : DEFAULT_ASK_MODEL)
-              }}
-              className="flex-1 px-2 py-1 bg-black text-green-400 border border-green-600 rounded text-xs font-bold"
-            >
-              <option value="agent">AGENT</option>
-              <option value="ask">ASK</option>
-            </select>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="flex-1 px-2 py-1 bg-black text-green-400 border border-green-600 rounded text-xs font-bold"
-            >
-              <optgroup label="Claude">
-                {CLAUDE_MODELS.map((m) => (
-                  <option key={m} value={m}>{formatModelName(m)}</option>
-                ))}
-              </optgroup>
-              <optgroup label="Gemini">
-                {GEMINI_MODELS.map((m) => (
-                  <option key={m} value={m}>{formatModelName(m)}</option>
-                ))}
-              </optgroup>
-            </select>
-          </div>
-          <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageUpload}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1 px-2 py-1 bg-black text-green-400 border border-green-600 rounded text-xs font-bold hover:bg-green-900/20"
-            >
-              {uploadedImage ? '📎 IMG' : '📎 UPLOAD'}
-            </button>
-            {uploadedImage && (
-              <button
-                onClick={() => setUploadedImage(null)}
-                className="px-2 py-1 bg-red-900/40 text-red-400 border border-red-600 rounded text-xs"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
+      <div className="w-80 bg-[#252526] border-l border-[#3c3c3c] flex flex-col">
         {/* Messages */}
-        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-2 space-y-2">
+        <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
+          {chatMessages.length === 0 && (
+            <div className="text-center text-gray-500 py-8">
+              <p className="text-sm mb-2">Plan, research, ideate</p>
+              <p className="text-xs">Describe what you want to build</p>
+            </div>
+          )}
           {chatMessages.map((message) => (
             <motion.div
               key={message.id}
@@ -909,9 +798,8 @@ export default function BrainstormApp() {
               animate={{ opacity: 1, y: 0 }}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              {/* Editing mode for user messages */}
               {editingMessageId === message.id ? (
-                <div className="max-w-[90%] w-full rounded border-2 border-green-400 bg-green-900/60 p-2">
+                <div className="max-w-[90%] w-full rounded-lg border border-blue-500 bg-[#2d2d2d] p-2">
                   <input
                     ref={editInputRef}
                     type="text"
@@ -925,62 +813,48 @@ export default function BrainstormApp() {
                         cancelEditing()
                       }
                     }}
-                    className="w-full bg-black text-green-300 px-2 py-1 text-xs rounded border border-green-600 focus:outline-none focus:border-green-400"
+                    className="w-full bg-[#1e1e1e] text-gray-200 px-3 py-2 text-sm rounded border border-[#3c3c3c] focus:outline-none focus:border-blue-500"
                     placeholder="Edit your message..."
                   />
                   <div className="flex gap-2 mt-2">
                     <button
                       onClick={submitEditedMessage}
-                      className="flex-1 px-2 py-1 bg-green-600 text-black rounded text-xs font-bold hover:bg-green-500"
+                      className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded text-sm font-medium hover:bg-blue-500"
                     >
-                      ↵ Submit
+                      Submit
                     </button>
                     <button
                       onClick={cancelEditing}
-                      className="px-2 py-1 bg-gray-700 text-gray-300 rounded text-xs hover:bg-gray-600"
+                      className="px-3 py-1.5 bg-[#3c3c3c] text-gray-300 rounded text-sm hover:bg-[#4c4c4c]"
                     >
                       Cancel
                     </button>
                   </div>
-                  <p className="text-xs mt-1 text-gray-500">Press Enter to submit, Esc to cancel</p>
                 </div>
               ) : (
                 <div
                   onClick={() => message.sender === 'user' && startEditingMessage(message)}
-                  className={`max-w-[90%] rounded border p-2 text-xs ${
+                  className={`max-w-[90%] rounded-lg p-3 text-sm ${
                     message.sender === 'user'
-                      ? 'bg-green-900/40 text-green-300 border-green-500 cursor-pointer hover:border-green-400 hover:bg-green-900/60 transition-colors'
+                      ? 'bg-blue-600 text-white cursor-pointer hover:bg-blue-500'
                       : message.sender === 'system'
-                      ? 'bg-blue-900/20 text-blue-300 border-blue-600'
-                      : 'bg-gray-900/40 text-gray-300 border-gray-600'
+                      ? 'bg-[#2d2d2d] text-gray-300 border border-[#3c3c3c]'
+                      : 'bg-[#2d2d2d] text-gray-200'
                   }`}
-                  title={message.sender === 'user' ? 'Click to edit and resubmit' : undefined}
                 >
                   {message.image && (
-                    <img src={message.image} alt="Uploaded" className="max-w-full mb-2 rounded border border-green-600" />
+                    <img src={message.image} alt="Uploaded" className="max-w-full mb-2 rounded" />
                   )}
-
                   <p className="whitespace-pre-wrap">{message.text}</p>
-
-                  {/* Show edited files */}
                   {message.editedFiles && message.editedFiles.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-gray-700">
+                    <div className="mt-2 pt-2 border-t border-[#3c3c3c]">
                       {message.editedFiles.map((file) => (
-                        <div key={file} className="text-green-400 font-mono flex items-center gap-1">
-                          <span className="text-green-500">✓</span> {file}
+                        <div key={file} className="text-green-400 text-xs flex items-center gap-1">
+                          <span>✓</span> {file}
                         </div>
                       ))}
                     </div>
                   )}
-
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs opacity-50">
-                      {message.timestamp.toLocaleTimeString()}
-                    </p>
-                    {message.sender === 'user' && !isGenerating && (
-                      <span className="text-xs text-green-600 opacity-50">✎ click to edit</span>
-                    )}
-                  </div>
                 </div>
               )}
             </motion.div>
@@ -991,25 +865,24 @@ export default function BrainstormApp() {
             {currentThought && (
               <motion.div
                 key={currentThought.id}
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
                 className="flex justify-start"
               >
-                <div className={`max-w-[90%] rounded border p-2 text-xs ${
+                <div className={`max-w-[90%] rounded-lg p-3 text-sm ${
                   currentThought.action === 'done'
-                    ? 'bg-green-900/30 text-green-400 border-green-600'
+                    ? 'bg-green-900/30 text-green-400'
                     : currentThought.action === 'editing'
-                    ? 'bg-yellow-900/30 text-yellow-400 border-yellow-600'
-                    : 'bg-blue-900/20 text-blue-300 border-blue-600'
+                    ? 'bg-yellow-900/30 text-yellow-400'
+                    : 'bg-[#2d2d2d] text-gray-300'
                 }`}>
                   <div className="flex items-center gap-2">
                     {currentThought.action === 'thinking' && (
-                      <span className="animate-spin">⟳</span>
+                      <span className="animate-spin">⏳</span>
                     )}
                     {currentThought.action === 'editing' && (
-                      <span className="animate-pulse">✎</span>
+                      <span className="animate-pulse">✏️</span>
                     )}
                     {currentThought.action === 'done' && (
                       <span>✓</span>
@@ -1017,7 +890,7 @@ export default function BrainstormApp() {
                     <span>{currentThought.thought}</span>
                   </div>
                   {currentThought.file && (
-                    <div className="mt-1 font-mono text-xs opacity-70">
+                    <div className="mt-1 text-xs opacity-70">
                       → {currentThought.file}
                     </div>
                   )}
@@ -1028,34 +901,104 @@ export default function BrainstormApp() {
 
           {isGenerating && !currentThought && (
             <div className="flex justify-start">
-              <div className="bg-gray-900/40 text-gray-300 border border-gray-600 rounded p-2">
+              <div className="bg-[#2d2d2d] rounded-lg p-3">
                 <div className="flex gap-1">
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" />
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                  <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Input */}
-        <div className="border-t border-green-800 p-2 bg-green-900/10">
+        {/* Input Area - Controls below textbox */}
+        <div className="border-t border-[#3c3c3c] p-3 space-y-2">
+          {/* Text input */}
           <div className="flex gap-2">
             <input
               type="text"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              placeholder={mode === 'agent' ? 'Build something...' : 'Ask a question...'}
-              className="flex-1 px-2 py-1.5 bg-black text-green-400 border border-green-600 rounded text-xs placeholder-gray-600 focus:outline-none focus:border-green-400"
+              placeholder={mode === 'agent' ? 'Plan, research, ideate' : 'Ask a question...'}
+              className="flex-1 px-3 py-2 bg-[#3c3c3c] text-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               onClick={handleSendMessage}
               disabled={isGenerating || (!chatInput.trim() && !uploadedImage)}
-              className="px-3 py-1 bg-green-600 text-black rounded font-bold hover:bg-green-500 disabled:opacity-50 text-xs"
+              className="p-2 bg-transparent text-gray-400 rounded-lg hover:text-white disabled:opacity-30"
             >
-              {isGenerating ? '⟳' : '→'}
+              {isGenerating ? '⏳' : '→'}
+            </button>
+          </div>
+          
+          {/* Controls row - Mode, Model, Image */}
+          <div className="flex items-center gap-2">
+            {/* Mode selector */}
+            <div className="flex items-center gap-1 bg-[#3c3c3c] rounded-lg px-2 py-1">
+              <span className="text-xs">∞</span>
+              <select
+                value={mode}
+                onChange={(e) => {
+                  const newMode = e.target.value as Mode
+                  setMode(newMode)
+                  setModel(newMode === 'agent' ? DEFAULT_AGENT_MODEL : DEFAULT_ASK_MODEL)
+                }}
+                className="bg-transparent text-sm text-gray-200 focus:outline-none cursor-pointer"
+              >
+                <option value="agent" className="bg-[#2d2d2d]">Agent</option>
+                <option value="ask" className="bg-[#2d2d2d]">Ask</option>
+              </select>
+            </div>
+
+            {/* Model selector */}
+            <select
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="bg-[#3c3c3c] text-sm text-gray-400 px-2 py-1 rounded-lg focus:outline-none cursor-pointer"
+            >
+              <optgroup label="Claude">
+                {CLAUDE_MODELS.map((m) => (
+                  <option key={m} value={m} className="bg-[#2d2d2d]">{formatModelName(m)}</option>
+                ))}
+              </optgroup>
+              <optgroup label="Gemini">
+                {GEMINI_MODELS.map((m) => (
+                  <option key={m} value={m} className="bg-[#2d2d2d]">{formatModelName(m)}</option>
+                ))}
+              </optgroup>
+            </select>
+
+            <div className="flex-1" />
+
+            {/* Image upload */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className={`p-1.5 rounded-lg ${uploadedImage ? 'bg-blue-600 text-white' : 'bg-[#3c3c3c] text-gray-400 hover:text-white'}`}
+              title="Upload image"
+            >
+              📎
+            </button>
+            {uploadedImage && (
+              <button
+                onClick={() => setUploadedImage(null)}
+                className="p-1.5 bg-red-600/30 text-red-400 rounded-lg hover:bg-red-600/50"
+              >
+                ✕
+              </button>
+            )}
+            
+            {/* Mic button placeholder */}
+            <button className="p-1.5 bg-[#3c3c3c] text-gray-400 rounded-lg hover:text-white" title="Voice input">
+              🎤
             </button>
           </div>
         </div>

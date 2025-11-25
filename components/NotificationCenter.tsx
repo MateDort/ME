@@ -17,7 +17,7 @@ export default function NotificationCenter() {
   }, [notifications, removeNotification])
 
   return (
-    <div className="fixed top-10 right-4 z-[10000] space-y-2">
+    <div className="fixed top-8 right-4 z-[10000] space-y-2">
       <AnimatePresence>
         {notifications.map((notification) => (
           <motion.div
@@ -25,33 +25,43 @@ export default function NotificationCenter() {
             initial={{ opacity: 0, x: 300, scale: 0.9 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 300, scale: 0.9 }}
-            className="bg-white border-2 border-black shadow-[4px_4px_0_#000] max-w-sm"
+            className="max-w-sm rounded-xl overflow-hidden"
+            style={{
+              background: 'rgba(255, 255, 255, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1)',
+              border: '1px solid rgba(255,255,255,0.5)',
+            }}
           >
-            {/* Classic Mac notification header */}
-            <div className="bg-white border-b-2 border-black px-2 py-1 flex items-center relative">
-              <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                {[...Array(4)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="h-[2px] bg-black" 
-                    style={{ marginTop: i === 0 ? '2px' : '2px' }}
-                  />
-                ))}
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-lg">
+                    ✨
+                  </div>
+                  <div>
+                    <h3 
+                      className="font-semibold text-gray-800 text-sm"
+                      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+                    >
+                      {notification.title}
+                    </h3>
+                    <p 
+                      className="text-sm text-gray-600 mt-1"
+                      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+                    >
+                      {notification.message}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeNotification(notification.id)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors text-sm"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={() => removeNotification(notification.id)}
-                className="w-3 h-3 border border-black bg-white hover:bg-black hover:text-white flex items-center justify-center text-xs font-bold mr-2 relative z-10"
-              >
-                ×
-              </button>
-              <span className="bg-white px-1 font-mono text-xs font-bold relative z-10">
-                ✨ {notification.title}
-              </span>
-            </div>
-            <div className="p-3 bg-[#f5f0e6]">
-              <p className="font-mono text-sm">
-                {notification.message}
-              </p>
             </div>
           </motion.div>
         ))}

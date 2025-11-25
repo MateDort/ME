@@ -128,67 +128,79 @@ export default function Window({ window, children }: WindowProps) {
 
   return (
     <motion.div
-      className="absolute bg-white border-2 border-black shadow-[4px_4px_0_#000] overflow-hidden"
+      className="absolute overflow-hidden rounded-xl"
       style={{
         left: window.x,
-        top: window.maximized ? '28px' : `${window.y}px`,
+        top: window.maximized ? '24px' : `${window.y}px`,
         width: window.maximized ? '100%' : window.width,
-        height: window.maximized ? 'calc(100% - 28px)' : window.height,
+        height: window.maximized ? 'calc(100% - 24px)' : window.height,
         zIndex: window.zIndex,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.1)',
+        background: 'rgba(236, 236, 236, 0.95)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        border: '1px solid rgba(0,0,0,0.1)',
       }}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       onMouseDown={handleMouseDown}
       onClick={() => setActiveWindow(window.id)}
     >
-      {/* Classic Mac Title Bar with stripes */}
+      {/* macOS Style Title Bar */}
       <div 
-        className="bg-white px-2 py-1 cursor-move border-b-2 border-black relative"
+        className="h-7 flex items-center px-3 cursor-move"
+        style={{
+          background: 'linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%)',
+          borderBottom: '1px solid rgba(0,0,0,0.1)',
+        }}
         onDoubleClick={handleTitleBarDoubleClick}
       >
-        {/* Horizontal stripes pattern */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          {[...Array(6)].map((_, i) => (
-            <div 
-              key={i} 
-              className="h-[2px] bg-black" 
-              style={{ marginTop: i === 0 ? '3px' : '2px' }}
-            />
-          ))}
-        </div>
-        
-        {/* Close box */}
-        <div className="flex items-center relative z-10">
+        {/* Traffic lights */}
+        <div className="flex gap-2 mr-4">
           <button
             onClick={(e) => {
               e.stopPropagation()
               closeWindow(window.id)
             }}
-            className="w-4 h-4 border-2 border-black bg-white hover:bg-black hover:text-white flex items-center justify-center text-xs font-bold mr-2"
+            className="w-3 h-3 rounded-full bg-[#ff5f57] hover:bg-[#ff3b30] transition-colors flex items-center justify-center group"
+            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
           >
-            ×
+            <span className="text-[8px] text-[#4d0000] opacity-0 group-hover:opacity-100">✕</span>
           </button>
-          
-          {/* Title with white background */}
-          <div className="flex-1 flex justify-center">
-            <span className="bg-white px-2 font-mono text-sm font-bold">{window.title}</span>
-          </div>
-          
-          {/* Zoom box */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              updateWindow(window.id, { minimized: true })
+            }}
+            className="w-3 h-3 rounded-full bg-[#febc2e] hover:bg-[#ff9500] transition-colors flex items-center justify-center group"
+            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
+          >
+            <span className="text-[8px] text-[#995700] opacity-0 group-hover:opacity-100">−</span>
+          </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
               updateWindow(window.id, { maximized: !window.maximized })
             }}
-            className="w-4 h-4 border-2 border-black bg-white hover:bg-black flex items-center justify-center"
+            className="w-3 h-3 rounded-full bg-[#28c840] hover:bg-[#00c853] transition-colors flex items-center justify-center group"
+            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
           >
-            <div className="w-2 h-2 border border-black" />
+            <span className="text-[8px] text-[#006400] opacity-0 group-hover:opacity-100">⤢</span>
           </button>
         </div>
+        
+        {/* Title */}
+        <span 
+          className="flex-1 text-center text-[13px] font-medium text-gray-700 truncate"
+          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+        >
+          {window.title}
+        </span>
+        <div className="w-16" />
       </div>
 
       {/* Content */}
-      <div className="h-[calc(100%-28px)] overflow-auto bg-[#f5f0e6]">
+      <div className="h-[calc(100%-28px)] overflow-auto bg-white">
         {children}
       </div>
 
@@ -202,17 +214,7 @@ export default function Window({ window, children }: WindowProps) {
           <div className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
           <div className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
           <div className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-          {/* Classic Mac resize grip in bottom-right */}
-          <div 
-            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20" 
-            onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
-          >
-            <svg className="w-full h-full" viewBox="0 0 16 16">
-              <line x1="4" y1="16" x2="16" y2="4" stroke="black" strokeWidth="1" />
-              <line x1="8" y1="16" x2="16" y2="8" stroke="black" strokeWidth="1" />
-              <line x1="12" y1="16" x2="16" y2="12" stroke="black" strokeWidth="1" />
-            </svg>
-          </div>
+          <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
         </>
       )}
     </motion.div>

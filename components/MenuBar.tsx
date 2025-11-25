@@ -18,7 +18,13 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
-      setCurrentTime(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))
+      setCurrentTime(now.toLocaleTimeString('en-US', { 
+        weekday: 'short',
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }))
     }
     updateTime()
     const interval = setInterval(updateTime, 1000)
@@ -43,25 +49,36 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
 
   const menuItems = {
     apple: [
-      { label: 'About MEOS', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
+      { label: 'About This Mac', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
+      { label: '---' },
       { label: 'System Preferences...', action: () => {} },
+      { label: 'App Store...', action: () => {} },
       { label: '---' },
-      { label: 'Hide MEOS', action: () => {} },
-      { label: 'Hide Others', action: () => {} },
-      { label: 'Show All', action: () => {} },
+      { label: 'Recent Items', action: () => {} },
       { label: '---' },
-      { label: 'Quit MEOS', action: () => {} },
+      { label: 'Force Quit...', action: () => {} },
+      { label: '---' },
+      { label: 'Sleep', action: () => {} },
+      { label: 'Restart...', action: () => {} },
+      { label: 'Shut Down...', action: () => {} },
+    ],
+    finder: [
+      { label: 'About Finder', action: () => {} },
+      { label: '---' },
+      { label: 'Preferences...', action: () => {} },
+      { label: '---' },
+      { label: 'Empty Trash...', action: () => {} },
     ],
     file: [
-      { label: 'New Window', action: () => {} },
-      { label: 'New Tab', action: () => {} },
+      { label: 'New Finder Window', action: () => {} },
+      { label: 'New Folder', action: () => {} },
       { label: '---' },
-      { label: 'Open...', action: () => {} },
-      { label: 'Open Recent', action: () => {} },
+      { label: 'Open', action: () => {} },
+      { label: 'Open With', action: () => {} },
       { label: '---' },
       { label: 'Close Window', action: () => {} },
-      { label: 'Save', action: () => {} },
-      { label: 'Save As...', action: () => {} },
+      { label: '---' },
+      { label: 'Get Info', action: () => {} },
     ],
     edit: [
       { label: 'Undo', action: () => {} },
@@ -71,15 +88,35 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       { label: 'Copy', action: () => {} },
       { label: 'Paste', action: () => {} },
       { label: 'Select All', action: () => {} },
+    ],
+    view: [
+      { label: 'as Icons', action: () => {} },
+      { label: 'as List', action: () => {} },
+      { label: 'as Columns', action: () => {} },
       { label: '---' },
-      { label: 'Find', action: () => {} },
-      { label: 'Find and Replace...', action: () => {} },
+      { label: 'Show Path Bar', action: () => {} },
+      { label: 'Show Status Bar', action: () => {} },
+    ],
+    go: [
+      { label: 'Back', action: () => {} },
+      { label: 'Forward', action: () => {} },
+      { label: '---' },
+      { label: 'Computer', action: () => {} },
+      { label: 'Home', action: () => {} },
+      { label: 'Desktop', action: () => {} },
+      { label: 'Downloads', action: () => {} },
+      { label: 'Applications', action: () => {} },
+    ],
+    window: [
+      { label: 'Minimize', action: () => {} },
+      { label: 'Zoom', action: () => {} },
+      { label: '---' },
+      { label: 'Bring All to Front', action: () => {} },
     ],
     help: [
       { label: 'MEOS Help', action: () => addWindow({ id: `help-${Date.now()}`, title: 'Help', component: 'help', x: 100, y: 100, width: 600, height: 400, minimized: false, maximized: false }) },
-      { label: 'Keyboard Shortcuts', action: () => {} },
       { label: '---' },
-      { label: 'About MEOS', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
+      { label: 'Search', action: () => {} },
     ],
   }
 
@@ -94,20 +131,48 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     setActiveMenu(null)
   }
 
+  const menuOrder = ['apple', 'finder', 'file', 'edit', 'view', 'go', 'window', 'help']
+  
+  const getMenuPosition = (menu: string) => {
+    switch(menu) {
+      case 'apple': return '0px'
+      case 'finder': return '30px'
+      case 'file': return '85px'
+      case 'edit': return '120px'
+      case 'view': return '155px'
+      case 'go': return '195px'
+      case 'window': return '225px'
+      case 'help': return '285px'
+      default: return '0'
+    }
+  }
+
   return (
-    <div ref={menuRef} className="fixed top-0 left-0 right-0 h-7 bg-white border-b-2 border-black z-50 flex items-center font-mono text-sm">
+    <div 
+      ref={menuRef} 
+      className="fixed top-0 left-0 right-0 h-6 bg-white/80 backdrop-blur-xl z-50 flex items-center shadow-sm border-b border-black/5"
+      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+    >
       {/* Apple Logo */}
       <button
         onClick={() => handleMenuClick('apple')}
-        className={`px-3 h-full hover:bg-black hover:text-white flex items-center ${activeMenu === 'apple' ? 'bg-black text-white' : ''}`}
+        className={`px-3 h-full hover:bg-black/5 flex items-center ${activeMenu === 'apple' ? 'bg-black/10' : ''}`}
       >
-        <span className="text-base">🍎</span>
+        <span className="text-sm opacity-80">🍎</span>
+      </button>
+
+      {/* Finder */}
+      <button
+        onClick={() => handleMenuClick('finder')}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] font-semibold ${activeMenu === 'finder' ? 'bg-black/10' : ''}`}
+      >
+        Finder
       </button>
 
       {/* File Menu */}
       <button
         onClick={() => handleMenuClick('file')}
-        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'file' ? 'bg-black text-white' : ''}`}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'file' ? 'bg-black/10' : ''}`}
       >
         File
       </button>
@@ -115,15 +180,39 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       {/* Edit Menu */}
       <button
         onClick={() => handleMenuClick('edit')}
-        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'edit' ? 'bg-black text-white' : ''}`}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'edit' ? 'bg-black/10' : ''}`}
       >
         Edit
+      </button>
+
+      {/* View Menu */}
+      <button
+        onClick={() => handleMenuClick('view')}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'view' ? 'bg-black/10' : ''}`}
+      >
+        View
+      </button>
+
+      {/* Go Menu */}
+      <button
+        onClick={() => handleMenuClick('go')}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'go' ? 'bg-black/10' : ''}`}
+      >
+        Go
+      </button>
+
+      {/* Window Menu */}
+      <button
+        onClick={() => handleMenuClick('window')}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'window' ? 'bg-black/10' : ''}`}
+      >
+        Window
       </button>
 
       {/* Help Menu */}
       <button
         onClick={() => handleMenuClick('help')}
-        className={`px-3 h-full hover:bg-black hover:text-white font-bold ${activeMenu === 'help' ? 'bg-black text-white' : ''}`}
+        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'help' ? 'bg-black/10' : ''}`}
       >
         Help
       </button>
@@ -131,10 +220,10 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Right side: Time icon and clock */}
-      <div className="flex items-center px-3 gap-2">
-        <span className="text-base">{timeIcon}</span>
-        <span className="font-mono text-xs font-bold">{currentTime}</span>
+      {/* Right side: Status icons and clock */}
+      <div className="flex items-center px-3 gap-3 text-[13px]">
+        <span className="opacity-70">{timeIcon}</span>
+        <span className="opacity-80">{currentTime}</span>
       </div>
 
       {/* Dropdown Menus */}
@@ -145,19 +234,19 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.1 }}
-            className="absolute top-7 bg-white border-2 border-black shadow-[4px_4px_0_#000] min-w-[180px] py-1"
-            style={{ left: activeMenu === 'apple' ? '0' : activeMenu === 'file' ? '40px' : activeMenu === 'edit' ? '85px' : '128px' }}
+            className="absolute top-6 bg-white/95 backdrop-blur-xl rounded-md shadow-xl min-w-[220px] py-1 border border-black/10"
+            style={{ left: getMenuPosition(activeMenu) }}
             onMouseLeave={() => setActiveMenu(null)}
           >
             {menuItems[activeMenu as keyof typeof menuItems].map((item, index) => {
               if (item.label === '---') {
-                return <div key={index} className="h-px bg-black my-1 mx-2" />
+                return <div key={index} className="h-px bg-black/10 my-1 mx-3" />
               }
               return (
                 <button
                   key={index}
                   onClick={() => handleMenuItemClick(item)}
-                  className="w-full text-left px-4 py-1 hover:bg-black hover:text-white font-mono text-sm"
+                  className="w-full text-left px-3 py-1 hover:bg-blue-500 hover:text-white text-[13px] transition-colors"
                 >
                   {item.label}
                 </button>

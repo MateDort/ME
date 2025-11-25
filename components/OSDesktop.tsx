@@ -44,6 +44,60 @@ const timeIcons: Record<TimeOfDay, string> = {
   night: '🌙',
 }
 
+// Classic macOS-style wallpapers for different times of day
+const timeWallpapers: Record<TimeOfDay, { gradient: string; overlay?: string }> = {
+  morning: {
+    // Sunrise mountain scene - soft pinks and oranges
+    gradient: `
+      linear-gradient(to bottom, 
+        #ffecd2 0%, 
+        #fcb69f 30%, 
+        #ee9ca7 50%,
+        #91c4d3 70%,
+        #667db6 100%
+      )
+    `,
+  },
+  midday: {
+    // High Sierra inspired - blue sky with warm mountain tones
+    gradient: `
+      linear-gradient(to bottom,
+        #56ccf2 0%,
+        #4facfe 20%,
+        #00c6fb 40%,
+        #c4a35a 60%,
+        #dc6c4e 75%,
+        #8b4513 90%,
+        #654321 100%
+      )
+    `,
+  },
+  afternoon: {
+    // Sunset colors - golden hour
+    gradient: `
+      linear-gradient(to bottom,
+        #ff7e5f 0%,
+        #feb47b 20%,
+        #ff6b6b 40%,
+        #c44d2c 60%,
+        #6b3a2e 80%,
+        #2d1f1f 100%
+      )
+    `,
+  },
+  night: {
+    // Night sky with stars feel
+    gradient: `
+      linear-gradient(to bottom,
+        #0f0c29 0%,
+        #302b63 30%,
+        #24243e 60%,
+        #1a1a2e 100%
+      )
+    `,
+  },
+}
+
 export default function OSDesktop() {
   const { addNotification } = useOSStore()
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('midday')
@@ -87,7 +141,7 @@ export default function OSDesktop() {
   // Screen lock overlay
   if (isLocked) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e] flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -108,24 +162,24 @@ export default function OSDesktop() {
             🌙
           </motion.div>
           
-          <h1 className="text-4xl font-mono font-bold text-white mb-4">
+          <h1 className="text-4xl font-light text-white mb-4" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif' }}>
             No Screens After 7:30 PM
           </h1>
           
-          <p className="text-xl font-mono text-gray-400 mb-8">
+          <p className="text-xl text-white/60 mb-8" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
             Time to rest. MEOS is locked until {getUnlockTime()}.
           </p>
           
-          <div className="bg-white border-2 border-white px-8 py-4 inline-block">
-            <p className="font-mono text-xs text-gray-500 mb-1">Current Time</p>
-            <p className="text-3xl font-mono text-black">{currentTime}</p>
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl px-8 py-4 inline-block border border-white/20">
+            <p className="text-xs text-white/40 mb-1">Current Time</p>
+            <p className="text-3xl font-light text-white">{currentTime}</p>
           </div>
           
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(50)].map((_, i) => (
               <motion.div
                 key={i}
-                className="absolute w-1 h-1 bg-white"
+                className="absolute w-1 h-1 bg-white rounded-full"
                 style={{
                   left: `${Math.random() * 100}%`,
                   top: `${Math.random() * 100}%`,
@@ -143,7 +197,7 @@ export default function OSDesktop() {
             ))}
           </div>
           
-          <p className="font-mono text-gray-500 mt-8 text-sm">
+          <p className="text-white/40 mt-8 text-sm" style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
             💤 Good sleep = better thinking tomorrow
           </p>
         </motion.div>
@@ -151,50 +205,43 @@ export default function OSDesktop() {
     )
   }
 
+  const wallpaper = timeWallpapers[timeOfDay]
+
   return (
-    <div className="fixed inset-0 bg-[#a8a8a8]">
-      {/* Classic Mac desktop pattern */}
+    <div 
+      className="fixed inset-0 transition-all duration-1000"
+      style={{ 
+        background: wallpaper.gradient,
+      }}
+    >
+      {/* Subtle noise texture overlay for depth */}
       <div 
-        className="absolute inset-0"
+        className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
-          backgroundImage: `
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 1px,
-              #b0b0b0 1px,
-              #b0b0b0 2px
-            ),
-            repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 1px,
-              #b0b0b0 1px,
-              #b0b0b0 2px
-            )
-          `,
-          backgroundSize: '4px 4px',
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
       />
       
-      {/* Desktop icons area */}
-      <div className="absolute top-10 right-4 flex flex-col gap-2">
-        <div className="flex flex-col items-center cursor-pointer hover:opacity-80">
-          <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-2xl shadow-[2px_2px_0_#000]">
-            💾
+      {/* Desktop icons area - macOS style in top right */}
+      <div className="absolute top-10 right-4 flex flex-col gap-4 items-center">
+        <motion.div 
+          className="flex flex-col items-center cursor-pointer group"
+          whileHover={{ scale: 1.05 }}
+        >
+          <div className="w-16 h-14 bg-gradient-to-b from-gray-200 to-gray-400 rounded-lg flex items-center justify-center shadow-lg border border-white/30">
+            <span className="text-3xl">💾</span>
           </div>
-          <span className="font-mono text-xs mt-1 bg-white px-1">Macintosh HD</span>
-        </div>
-        <div className="flex flex-col items-center cursor-pointer hover:opacity-80">
-          <div className="w-12 h-12 bg-white border-2 border-black flex items-center justify-center text-2xl shadow-[2px_2px_0_#000]">
-            🗑️
-          </div>
-          <span className="font-mono text-xs mt-1 bg-white px-1">Trash</span>
-        </div>
+          <span 
+            className="text-white text-xs mt-1 px-2 py-0.5 rounded bg-black/30 backdrop-blur-sm shadow-sm"
+            style={{ fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+          >
+            Macintosh HD
+          </span>
+        </motion.div>
       </div>
       
       <MenuBar timeIcon={timeIcons[timeOfDay]} />
-      <div className="pt-7">
+      <div className="pt-6">
         <WindowManager />
       </div>
       <Dock />
