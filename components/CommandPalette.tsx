@@ -169,7 +169,7 @@ export default function CommandPalette() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10001] flex items-center justify-center"
+        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[10001] flex items-start justify-center pt-32"
         onClick={() => {
           setIsOpen(false)
           setInput('')
@@ -178,61 +178,60 @@ export default function CommandPalette() {
         }}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-gray-900 border-2 border-retro-yellow rounded-lg shadow-2xl w-full max-w-2xl mx-4"
+          initial={{ scale: 0.95, opacity: 0, y: -20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          exit={{ scale: 0.95, opacity: 0, y: -20 }}
+          className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden border border-white/50"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="bg-retro-yellow text-black px-6 py-4 border-b-2 border-black">
-            <h2 className="text-xl font-bold">💭 Share Your Thought</h2>
-            <p className="text-sm mt-1">Press M+M to open • Esc to close</p>
-          </div>
-
           {/* Input */}
-          <div className="p-6">
-            <div className="flex gap-2 mb-4">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
-                placeholder="What's on your mind? (e.g., 'play music', 'show me F1 news', 'I want to build something')"
-                className="flex-1 px-4 py-3 bg-gray-800 border-2 border-retro-blue rounded text-white placeholder-gray-500 focus:outline-none focus:border-retro-yellow"
-              />
+          <div className="p-4">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">💭</span>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+                  placeholder="What's on your mind?"
+                  className="w-full pl-12 pr-4 py-3 bg-gray-100 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-lg"
+                />
+              </div>
               <button
                 onClick={handleSubmit}
                 disabled={isLoading || !input.trim()}
-                className="px-6 py-3 bg-retro-green text-black rounded font-bold hover:bg-retro-purple disabled:opacity-50"
+                className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isLoading ? '⟳' : '→'}
               </button>
             </div>
+            <p className="text-xs text-gray-400 mt-2 text-center">Press M+M to open • Esc to close</p>
+          </div>
 
-            {/* Response */}
-            {response && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-gray-800 rounded-lg p-4 border-2 border-retro-blue"
-              >
+          {/* Response */}
+          {response && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="px-4 pb-4"
+            >
+              <div className="bg-gray-50 rounded-xl p-4">
                 <div
-                  className="text-white leading-relaxed [&_strong]:font-bold [&_strong]:text-retro-yellow [&_p]:mb-3 [&_p:last-child]:mb-0"
-                  style={{ fontFamily: 'inherit' }}
+                  className="text-gray-700 leading-relaxed [&_strong]:font-semibold [&_strong]:text-gray-900 [&_p]:mb-2 [&_p:last-child]:mb-0"
                   dangerouslySetInnerHTML={{ __html: formatResponse(response) }}
                 />
-              </motion.div>
-            )}
-
-            {isLoading && (
-              <div className="text-center py-4">
-                <div className="inline-block animate-spin text-2xl">⟳</div>
-                <p className="text-gray-400 mt-2">Thinking...</p>
               </div>
-            )}
-          </div>
+            </motion.div>
+          )}
+
+          {isLoading && (
+            <div className="text-center py-4">
+              <div className="inline-block animate-spin text-2xl">⏳</div>
+              <p className="text-gray-500 mt-2 text-sm">Thinking...</p>
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>

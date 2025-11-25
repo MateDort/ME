@@ -17,15 +17,54 @@ export default function NewsApp() {
 
   useEffect(() => {
     loadNews()
+    
+    // Check if we need to generate new news at midnight
+    const checkMidnight = () => {
+      const now = new Date()
+      const tomorrow = new Date(now)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      tomorrow.setHours(0, 0, 0, 0)
+      const msUntilMidnight = tomorrow.getTime() - now.getTime()
+      
+      setTimeout(() => {
+        // Clear cache and reload at midnight
+        localStorage.removeItem('daily_news')
+        localStorage.removeItem('daily_news_date')
+        loadNews()
+        // Set up next midnight check
+        checkMidnight()
+      }, msUntilMidnight)
+    }
+    
+    checkMidnight()
   }, [])
 
   const loadNews = async () => {
+    // Check if we have cached news for today
+    const today = new Date().toDateString()
+    const cachedDate = localStorage.getItem('daily_news_date')
+    const cachedNews = localStorage.getItem('daily_news')
+    
+    if (cachedDate === today && cachedNews) {
+      try {
+        setDailyNews(JSON.parse(cachedNews))
+        setIsLoadingNews(false)
+        return
+      } catch (e) {
+        // If parsing fails, fetch new news
+      }
+    }
+    
+    // Fetch new news
     setIsLoadingNews(true)
     try {
       const response = await fetch('/api/news')
       const data = await response.json()
       if (data.articles) {
         setDailyNews(data.articles)
+        // Cache for today
+        localStorage.setItem('daily_news', JSON.stringify(data.articles))
+        localStorage.setItem('daily_news_date', today)
       }
     } catch (error) {
       console.error('Error loading news:', error)
@@ -47,6 +86,7 @@ export default function NewsApp() {
             onClick={loadNews}
             disabled={isLoadingNews}
             className="px-4 py-2 bg-retro-yellow text-black rounded font-bold hover:bg-retro-green disabled:opacity-50 border-2 border-black"
+            title="News refreshes automatically at midnight"
           >
             🔄 Refresh
           </button>

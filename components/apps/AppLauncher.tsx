@@ -11,6 +11,8 @@ const allApps = [
   { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm' },
   { id: 'builder', title: 'Builder', icon: '🔧', description: 'Edit MEOS itself', component: 'builder' },
   { id: 'health', title: 'Health', icon: '🏃', description: 'Health insights', component: 'health' },
+  { id: 'language', title: 'Language', icon: '🌍', description: 'Learn Spanish, Italian, French', component: 'language' },
+  { id: 'piano', title: 'Piano', icon: '🎹', description: 'Play piano with keyboard', component: 'piano' },
   { id: 'launcher', title: 'App Launcher', icon: '🚀', description: 'View all apps', component: 'launcher' },
 ]
 

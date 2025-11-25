@@ -126,12 +126,12 @@ export default function Window({ window, children }: WindowProps) {
 
   return (
     <motion.div
-      className="absolute border-2 border-retro-blue bg-gray-900 shadow-2xl"
+      className="absolute bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/50 overflow-hidden"
       style={{
         left: window.x,
-        top: window.maximized ? '32px' : `${window.y}px`, // Account for menu bar when maximized
+        top: window.maximized ? '32px' : `${window.y}px`,
         width: window.maximized ? '100%' : window.width,
-        height: window.maximized ? 'calc(100% - 32px)' : window.height, // Account for menu bar when maximized
+        height: window.maximized ? 'calc(100% - 32px)' : window.height,
         zIndex: window.zIndex,
       }}
       initial={{ opacity: 0, scale: 0.9 }}
@@ -140,83 +140,50 @@ export default function Window({ window, children }: WindowProps) {
       onClick={() => setActiveWindow(window.id)}
     >
       {/* Title Bar */}
-      <div className="bg-retro-blue text-black px-4 py-2 flex items-center justify-between cursor-move">
-        <span className="font-bold text-sm">{window.title}</span>
-        <div className="flex gap-2">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              updateWindow(window.id, { minimized: true })
-            }}
-            className="w-6 h-6 bg-retro-yellow hover:bg-retro-orange border border-black"
-          >
-            −
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              updateWindow(window.id, {
-                maximized: !window.maximized,
-              })
-            }}
-            className="w-6 h-6 bg-retro-green hover:bg-retro-purple border border-black"
-          >
-            □
-          </button>
+      <div className="bg-gray-100/80 backdrop-blur-sm px-4 py-2 flex items-center cursor-move border-b border-gray-200">
+        <div className="flex gap-2 mr-4">
           <button
             onClick={(e) => {
               e.stopPropagation()
               closeWindow(window.id)
             }}
-            className="w-6 h-6 bg-red-500 hover:bg-red-600 border border-black"
-          >
-            ×
-          </button>
+            className="w-3 h-3 rounded-full bg-red-500 hover:bg-red-600 transition-colors"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              updateWindow(window.id, { minimized: true })
+            }}
+            className="w-3 h-3 rounded-full bg-yellow-500 hover:bg-yellow-600 transition-colors"
+          />
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              updateWindow(window.id, { maximized: !window.maximized })
+            }}
+            className="w-3 h-3 rounded-full bg-green-500 hover:bg-green-600 transition-colors"
+          />
         </div>
+        <span className="flex-1 text-center text-sm font-medium text-gray-700">{window.title}</span>
+        <div className="w-16" /> {/* Spacer for balance */}
       </div>
 
       {/* Content */}
-      <div className="h-[calc(100%-40px)] overflow-auto bg-gray-800">
+      <div className="h-[calc(100%-40px)] overflow-auto bg-white">
         {children}
       </div>
 
       {/* Resize Handles */}
       {!window.maximized && (
         <>
-          {/* Edges */}
-          <div
-            className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-retro-yellow/50 z-10"
-            onMouseDown={(e) => handleResizeStart(e, 'top')}
-          />
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-retro-yellow/50 z-10"
-            onMouseDown={(e) => handleResizeStart(e, 'bottom')}
-          />
-          <div
-            className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize hover:bg-retro-yellow/50 z-10"
-            onMouseDown={(e) => handleResizeStart(e, 'left')}
-          />
-          <div
-            className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize hover:bg-retro-yellow/50 z-10"
-            onMouseDown={(e) => handleResizeStart(e, 'right')}
-          />
-          {/* Corners */}
-          <div
-            className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize hover:bg-retro-yellow/50 z-20"
-            onMouseDown={(e) => handleResizeStart(e, 'top-left')}
-          />
-          <div
-            className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize hover:bg-retro-yellow/50 z-20"
-            onMouseDown={(e) => handleResizeStart(e, 'top-right')}
-          />
-          <div
-            className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize hover:bg-retro-yellow/50 z-20"
-            onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
-          />
-          <div
-            className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize hover:bg-retro-yellow/50 z-20"
-            onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
-          />
+          <div className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'top')} />
+          <div className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
+          <div className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'left')} />
+          <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'right')} />
+          <div className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
+          <div className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
+          <div className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
+          <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
         </>
       )}
     </motion.div>

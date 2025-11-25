@@ -10,6 +10,8 @@ import BrainstormApp from './apps/BrainstormApp'
 import HealthApp from './apps/HealthApp'
 import BuilderApp from './apps/BuilderApp'
 import AppLauncher from './apps/AppLauncher'
+import LanguageApp from './apps/LanguageApp'
+import PianoApp from './apps/PianoApp'
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   messages: MessagesApp,
@@ -20,6 +22,9 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   health: HealthApp,
   builder: BuilderApp,
   launcher: AppLauncher,
+  language: LanguageApp,
+  piano: PianoApp,
+  blank: () => <div className="w-full h-full flex items-center justify-center text-gray-500">Empty Window</div>,
 }
 
 export default function WindowManager() {

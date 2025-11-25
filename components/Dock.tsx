@@ -6,12 +6,8 @@ import { motion } from 'framer-motion'
 const apps = [
   { id: 'launcher', title: 'App Launcher', icon: '🚀', component: 'launcher' },
   { id: 'messages', title: 'Messages', icon: '💬', component: 'messages' },
-  { id: 'music', title: 'Music', icon: '🎵', component: 'music' },
   { id: 'search', title: 'Google', icon: '🔍', component: 'search' },
-  { id: 'news', title: 'News', icon: '📰', component: 'news' },
   { id: 'brainstorm', title: 'Brainstorm', icon: '💡', component: 'brainstorm' },
-  { id: 'builder', title: 'Builder', icon: '🔧', component: 'builder' },
-  { id: 'health', title: 'Health', icon: '🏃', component: 'health' },
 ]
 
 export default function Dock() {
@@ -44,7 +40,7 @@ export default function Dock() {
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
       <motion.div
-        className="flex gap-2 bg-gray-900/90 backdrop-blur-md border-2 border-retro-blue p-3 rounded-lg"
+        className="flex gap-2 bg-white/30 backdrop-blur-xl border border-white/40 p-2 rounded-2xl shadow-lg"
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -53,8 +49,8 @@ export default function Dock() {
           <motion.button
             key={app.id}
             onClick={() => handleAppClick(app)}
-            className="w-16 h-16 bg-gray-800 border-2 border-retro-green hover:border-retro-yellow flex items-center justify-center text-2xl rounded transition-all"
-            whileHover={{ scale: 1.1, y: -5 }}
+            className="w-14 h-14 bg-white/50 backdrop-blur-sm border border-white/50 hover:bg-white/70 flex items-center justify-center text-2xl rounded-xl transition-all shadow-sm"
+            whileHover={{ scale: 1.15, y: -8 }}
             whileTap={{ scale: 0.95 }}
             title={app.title}
           >

@@ -13,9 +13,11 @@ interface MEOSFile {
 export default function BuilderApp() {
   const [files, setFiles] = useState<MEOSFile[]>([])
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
+  const [editedContent, setEditedContent] = useState<string>('')
   const [chatInput, setChatInput] = useState('')
   const [chatMessages, setChatMessages] = useState<Array<{ id: string; text: string; sender: 'user' | 'agent'; timestamp: Date }>>([])
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     // Load MEOS file structure
@@ -49,7 +51,68 @@ export default function BuilderApp() {
     setFiles([...baseFiles, ...customFiles])
     if (baseFiles.length > 0) {
       setSelectedFile(baseFiles[0].path)
+      setEditedContent(baseFiles[0].content)
     }
+  }
+
+  useEffect(() => {
+    if (selectedFile) {
+      const file = files.find(f => f.path === selectedFile)
+      if (file) {
+        setEditedContent(file.content)
+      }
+    }
+  }, [selectedFile, files])
+
+  const handleSaveFile = () => {
+    if (!selectedFile) return
+    
+    const updatedFiles = files.map(f => 
+      f.path === selectedFile ? { ...f, content: editedContent } : f
+    )
+    setFiles(updatedFiles)
+    
+    // Save to localStorage
+    const customApps = updatedFiles
+      .filter(f => f.path.startsWith('components/apps/') && !f.path.includes('MessagesApp') && !f.path.includes('MusicPlayer') && !f.path.includes('GoogleSearch') && !f.path.includes('NewsApp') && !f.path.includes('BrainstormApp') && !f.path.includes('HealthApp') && !f.path.includes('BuilderApp') && !f.path.includes('AppLauncher') && !f.path.includes('LanguageApp') && !f.path.includes('PianoApp'))
+      .map(f => ({
+        name: f.path.replace('components/apps/', '').replace('App.tsx', ''),
+        code: f.content,
+      }))
+    localStorage.setItem('meos_custom_apps', JSON.stringify(customApps))
+    
+    setIsEditing(false)
+    alert('File saved! (Note: Changes are saved to localStorage. To persist, you\'ll need to manually update the actual files.)')
+  }
+
+  const handleCreateNewApp = async () => {
+    const appName = prompt('Enter app name (e.g., "Calculator"):')
+    if (!appName) return
+    
+    const newFile: MEOSFile = {
+      path: `components/apps/${appName}App.tsx`,
+      type: 'typescript',
+      content: `'use client'
+
+import { useState } from 'react'
+
+export default function ${appName}App() {
+  return (
+    <div className="h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black text-white">
+      <div className="text-center">
+        <h1 className="text-4xl font-bold mb-4">${appName}</h1>
+        <p className="text-gray-400">Your new app component</p>
+      </div>
+    </div>
+  )
+}
+`,
+    }
+    
+    setFiles([...files, newFile])
+    setSelectedFile(newFile.path)
+    setEditedContent(newFile.content)
+    setIsEditing(true)
   }
 
   const handleChatSubmit = async (e: React.FormEvent) => {
@@ -153,6 +216,8 @@ export default function BuilderApp() {
               f.path === selectedFile ? { ...f, content: data.code } : f
             )
           )
+          setEditedContent(data.code)
+          setIsEditing(true)
         }
       }
     } catch (error: any) {
@@ -200,18 +265,49 @@ export default function BuilderApp() {
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto">
           {selectedFile ? (
-            <div className="h-full">
-              <div className="bg-gray-800 p-2 border-b border-gray-700">
+            <div className="h-full flex flex-col">
+              <div className="bg-gray-800 p-2 border-b border-gray-700 flex items-center justify-between">
                 <span className="text-sm text-gray-400">{selectedFile}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm"
+                  >
+                    {isEditing ? '📖 View' : '✏️ Edit'}
+                  </button>
+                  {isEditing && (
+                    <button
+                      onClick={handleSaveFile}
+                      className="px-3 py-1 bg-green-600 hover:bg-green-500 rounded text-sm font-bold"
+                    >
+                      💾 Save
+                    </button>
+                  )}
+                  <button
+                    onClick={handleCreateNewApp}
+                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded text-sm font-bold"
+                  >
+                    ➕ New App
+                  </button>
+                </div>
               </div>
-              <div className="h-full overflow-auto">
-                <SyntaxHighlighter
-                  language={files.find((f) => f.path === selectedFile)?.type || 'typescript'}
-                  style={vscDarkPlus}
-                  customStyle={{ margin: 0, height: '100%', background: '#1e1e1e' }}
-                >
-                  {selectedFileContent}
-                </SyntaxHighlighter>
+              <div className="flex-1 overflow-auto">
+                {isEditing ? (
+                  <textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    className="w-full h-full p-4 bg-gray-900 text-white font-mono text-sm resize-none focus:outline-none"
+                    style={{ fontFamily: 'monospace', tabSize: 2 }}
+                  />
+                ) : (
+                  <SyntaxHighlighter
+                    language={files.find((f) => f.path === selectedFile)?.type || 'typescript'}
+                    style={vscDarkPlus}
+                    customStyle={{ margin: 0, height: '100%', background: '#1e1e1e' }}
+                  >
+                    {selectedFileContent}
+                  </SyntaxHighlighter>
+                )}
               </div>
             </div>
           ) : (
@@ -220,6 +316,12 @@ export default function BuilderApp() {
                 <div className="text-6xl mb-4">🔧</div>
                 <p className="text-xl">Select a file to edit</p>
                 <p className="text-sm mt-2">This is the Builder - edit MEOS itself!</p>
+                <button
+                  onClick={handleCreateNewApp}
+                  className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold"
+                >
+                  ➕ Create New App
+                </button>
               </div>
             </div>
           )}
