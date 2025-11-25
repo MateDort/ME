@@ -14,7 +14,6 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   const { addWindow } = useOSStore()
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Update clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date()
@@ -52,15 +51,16 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       { label: 'About This Mac', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
       { label: '---' },
       { label: 'System Preferences...', action: () => {} },
-      { label: 'App Store...', action: () => {} },
+      { label: 'Dock', action: () => {} },
       { label: '---' },
       { label: 'Recent Items', action: () => {} },
-      { label: '---' },
       { label: 'Force Quit...', action: () => {} },
       { label: '---' },
       { label: 'Sleep', action: () => {} },
       { label: 'Restart...', action: () => {} },
       { label: 'Shut Down...', action: () => {} },
+      { label: '---' },
+      { label: 'Log Out...', action: () => {} },
     ],
     finder: [
       { label: 'About Finder', action: () => {} },
@@ -68,17 +68,26 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       { label: 'Preferences...', action: () => {} },
       { label: '---' },
       { label: 'Empty Trash...', action: () => {} },
+      { label: 'Secure Empty Trash...', action: () => {} },
     ],
     file: [
       { label: 'New Finder Window', action: () => {} },
       { label: 'New Folder', action: () => {} },
+      { label: 'New Smart Folder', action: () => {} },
+      { label: 'New Burn Folder', action: () => {} },
       { label: '---' },
       { label: 'Open', action: () => {} },
       { label: 'Open With', action: () => {} },
-      { label: '---' },
       { label: 'Close Window', action: () => {} },
       { label: '---' },
       { label: 'Get Info', action: () => {} },
+      { label: 'Duplicate', action: () => {} },
+      { label: 'Make Alias', action: () => {} },
+      { label: 'Show Original', action: () => {} },
+      { label: 'Add to Favorites', action: () => {} },
+      { label: '---' },
+      { label: 'Move to Trash', action: () => {} },
+      { label: 'Burn Disc...', action: () => {} },
     ],
     edit: [
       { label: 'Undo', action: () => {} },
@@ -94,27 +103,32 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       { label: 'as List', action: () => {} },
       { label: 'as Columns', action: () => {} },
       { label: '---' },
-      { label: 'Show Path Bar', action: () => {} },
-      { label: 'Show Status Bar', action: () => {} },
+      { label: 'Clean Up', action: () => {} },
+      { label: 'Arrange By', action: () => {} },
+      { label: '---' },
+      { label: 'Show View Options', action: () => {} },
     ],
     go: [
       { label: 'Back', action: () => {} },
       { label: 'Forward', action: () => {} },
+      { label: 'Enclosing Folder', action: () => {} },
       { label: '---' },
       { label: 'Computer', action: () => {} },
       { label: 'Home', action: () => {} },
-      { label: 'Desktop', action: () => {} },
-      { label: 'Downloads', action: () => {} },
+      { label: 'iDisk', action: () => {} },
       { label: 'Applications', action: () => {} },
+      { label: 'Recent Folders', action: () => {} },
+      { label: '---' },
+      { label: 'Go to Folder...', action: () => {} },
     ],
     window: [
-      { label: 'Minimize', action: () => {} },
-      { label: 'Zoom', action: () => {} },
+      { label: 'Minimize Window', action: () => {} },
+      { label: 'Zoom Window', action: () => {} },
       { label: '---' },
       { label: 'Bring All to Front', action: () => {} },
     ],
     help: [
-      { label: 'MEOS Help', action: () => addWindow({ id: `help-${Date.now()}`, title: 'Help', component: 'help', x: 100, y: 100, width: 600, height: 400, minimized: false, maximized: false }) },
+      { label: 'Mac Help', action: () => addWindow({ id: `help-${Date.now()}`, title: 'Help', component: 'help', x: 100, y: 100, width: 600, height: 400, minimized: false, maximized: false }) },
       { label: '---' },
       { label: 'Search', action: () => {} },
     ],
@@ -131,8 +145,6 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     setActiveMenu(null)
   }
 
-  const menuOrder = ['apple', 'finder', 'file', 'edit', 'view', 'go', 'window', 'help']
-  
   const getMenuPosition = (menu: string) => {
     switch(menu) {
       case 'apple': return '0px'
@@ -150,69 +162,78 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   return (
     <div 
       ref={menuRef} 
-      className="fixed top-0 left-0 right-0 h-6 bg-white/80 backdrop-blur-xl z-50 flex items-center shadow-sm border-b border-black/5"
-      style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+      className="fixed top-0 left-0 right-0 h-6 z-50 flex items-center text-white font-bold"
+      style={{ 
+        background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(200,200,255,0.3) 50%, rgba(150,150,220,0.4) 100%)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+        borderBottom: '1px solid rgba(255,255,255,0.3)',
+        fontFamily: '"Lucida Grande", sans-serif',
+        fontSize: '13px',
+        textShadow: '0 1px 0 rgba(255,255,255,0.5)',
+      }}
     >
       {/* Apple Logo */}
       <button
         onClick={() => handleMenuClick('apple')}
-        className={`px-3 h-full hover:bg-black/5 flex items-center ${activeMenu === 'apple' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full flex items-center ${activeMenu === 'apple' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
-        <span className="text-sm opacity-80">🍎</span>
+        <span className="text-base">🍎</span>
       </button>
 
       {/* Finder */}
       <button
         onClick={() => handleMenuClick('finder')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] font-semibold ${activeMenu === 'finder' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'finder' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         Finder
       </button>
 
-      {/* File Menu */}
+      {/* File */}
       <button
         onClick={() => handleMenuClick('file')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'file' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'file' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         File
       </button>
 
-      {/* Edit Menu */}
+      {/* Edit */}
       <button
         onClick={() => handleMenuClick('edit')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'edit' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'edit' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         Edit
       </button>
 
-      {/* View Menu */}
+      {/* View */}
       <button
         onClick={() => handleMenuClick('view')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'view' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'view' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         View
       </button>
 
-      {/* Go Menu */}
+      {/* Go */}
       <button
         onClick={() => handleMenuClick('go')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'go' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'go' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         Go
       </button>
 
-      {/* Window Menu */}
+      {/* Window */}
       <button
         onClick={() => handleMenuClick('window')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'window' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'window' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         Window
       </button>
 
-      {/* Help Menu */}
+      {/* Help */}
       <button
         onClick={() => handleMenuClick('help')}
-        className={`px-2 h-full hover:bg-black/5 text-[13px] ${activeMenu === 'help' ? 'bg-black/10' : ''}`}
+        className={`px-2 h-full ${activeMenu === 'help' ? 'bg-white/30' : 'hover:bg-white/20'}`}
       >
         Help
       </button>
@@ -220,33 +241,61 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Right side: Status icons and clock */}
-      <div className="flex items-center px-3 gap-3 text-[13px]">
-        <span className="opacity-70">{timeIcon}</span>
-        <span className="opacity-80">{currentTime}</span>
+      {/* Right side */}
+      <div className="flex items-center px-3 gap-2">
+        <span>{timeIcon}</span>
+        <span className="text-xs">{currentTime}</span>
       </div>
 
-      {/* Dropdown Menus */}
+      {/* Dropdown Menus - Classic Aqua style */}
       <AnimatePresence>
         {activeMenu && menuItems[activeMenu as keyof typeof menuItems] && (
           <motion.div
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.1 }}
-            className="absolute top-6 bg-white/95 backdrop-blur-xl rounded-md shadow-xl min-w-[220px] py-1 border border-black/10"
-            style={{ left: getMenuPosition(activeMenu) }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-6 rounded-lg min-w-[220px] py-2"
+            style={{ 
+              left: getMenuPosition(activeMenu),
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(245,245,255,0.95) 100%)',
+              backdropFilter: 'blur(20px)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.8)',
+              border: '1px solid rgba(255,255,255,0.6)',
+            }}
             onMouseLeave={() => setActiveMenu(null)}
           >
             {menuItems[activeMenu as keyof typeof menuItems].map((item, index) => {
               if (item.label === '---') {
-                return <div key={index} className="h-px bg-black/10 my-1 mx-3" />
+                return (
+                  <div 
+                    key={index} 
+                    className="h-px my-1 mx-3"
+                    style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(0,0,0,0.2), transparent)',
+                    }}
+                  />
+                )
               }
               return (
                 <button
                   key={index}
                   onClick={() => handleMenuItemClick(item)}
-                  className="w-full text-left px-3 py-1 hover:bg-blue-500 hover:text-white text-[13px] transition-colors"
+                  className="w-full text-left px-4 py-1 text-sm"
+                  style={{
+                    color: '#333',
+                    fontFamily: '"Lucida Grande", sans-serif',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(180deg, #5195E5 0%, #3A7FD5 100%)'
+                    e.currentTarget.style.color = 'white'
+                    e.currentTarget.style.textShadow = '0 -1px 0 rgba(0,0,0,0.3)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = '#333'
+                    e.currentTarget.style.textShadow = 'none'
+                  }}
                 >
                   {item.label}
                 </button>

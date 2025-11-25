@@ -9,7 +9,7 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Lucida Grande', 'Lucida Sans Unicode', sans-serif;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
@@ -17,49 +17,76 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* macOS-style bold text */
+/* Classic Aqua bold text */
 strong {
-  font-weight: 600;
+  font-weight: bold;
   font-family: inherit;
 }
 
-/* macOS-style scrollbars */
+/* Classic Mac OS X scrollbars - aqua style */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 15px;
+  height: 15px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: linear-gradient(90deg, #e0e0e0 0%, #f5f5f5 50%, #e0e0e0 100%);
+  border: 1px solid #999;
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+  background: linear-gradient(180deg, #7fa5d1 0%, #5989c7 50%, #4a7bb8 100%);
+  border: 1px solid #3a6ba8;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
+  background: linear-gradient(180deg, #8fb5e1 0%, #6999d7 50%, #5a8bc8 100%);
+}
+
+::-webkit-scrollbar-button {
+  background: linear-gradient(180deg, #d0d0d0 0%, #b0b0b0 100%);
+  border: 1px solid #999;
+  height: 15px;
 }
 
 ::-webkit-scrollbar-corner {
-  background: transparent;
+  background: #e0e0e0;
 }
 
-/* macOS-style selection */
+/* Classic Aqua selection */
 ::selection {
-  background: rgba(0, 122, 255, 0.3);
-  color: inherit;
+  background: rgba(81, 149, 229, 0.6);
+  color: white;
 }
 
-/* Smooth transitions */
-* {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Aqua-style glossy button class */
+.aqua-button {
+  background: linear-gradient(180deg, #ffffff 0%, #e8e8e8 50%, #d0d0d0 100%);
+  border: 1px solid #7fa5d1;
+  box-shadow: 
+    inset 0 1px 0 rgba(255,255,255,0.8),
+    0 1px 2px rgba(0,0,0,0.2);
+  border-radius: 12px;
 }
 
-/* Disable transitions for elements that shouldn't have them */
-input, textarea, button {
-  transition-duration: 0ms;
+.aqua-button:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f0f0 50%, #e0e0e0 100%);
+}
+
+.aqua-button:active {
+  background: linear-gradient(180deg, #d0d0d0 0%, #e8e8e8 50%, #ffffff 100%);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Aqua pinstripe pattern */
+.aqua-pinstripe {
+  background: 
+    linear-gradient(90deg, 
+      rgba(255,255,255,0.3) 0%, 
+      transparent 50%, 
+      rgba(255,255,255,0.3) 100%);
+  background-size: 3px 100%;
 }

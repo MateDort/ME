@@ -128,71 +128,110 @@ export default function Window({ window, children }: WindowProps) {
 
   return (
     <motion.div
-      className="absolute overflow-hidden rounded-xl"
+      className="absolute overflow-hidden rounded-lg"
       style={{
         left: window.x,
         top: window.maximized ? '24px' : `${window.y}px`,
         width: window.maximized ? '100%' : window.width,
         height: window.maximized ? 'calc(100% - 24px)' : window.height,
         zIndex: window.zIndex,
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.1)',
-        background: 'rgba(236, 236, 236, 0.95)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        border: '1px solid rgba(0,0,0,0.1)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5), 0 0 1px rgba(0,0,0,0.3)',
+        background: 'rgba(236, 236, 236, 0.98)',
+        border: '1px solid rgba(255,255,255,0.5)',
       }}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.95, y: -20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       onMouseDown={handleMouseDown}
       onClick={() => setActiveWindow(window.id)}
     >
-      {/* macOS Style Title Bar */}
+      {/* Classic Aqua Title Bar with brushed metal */}
       <div 
-        className="h-7 flex items-center px-3 cursor-move"
+        className="h-7 flex items-center px-3 cursor-move relative"
         style={{
-          background: 'linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%)',
-          borderBottom: '1px solid rgba(0,0,0,0.1)',
+          background: `
+            linear-gradient(180deg, 
+              rgba(255,255,255,0.8) 0%, 
+              rgba(220,220,230,0.8) 20%,
+              rgba(200,200,220,0.8) 50%, 
+              rgba(180,180,210,0.8) 80%,
+              rgba(160,160,200,0.8) 100%
+            )
+          `,
+          borderBottom: '1px solid rgba(0,0,0,0.2)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
         }}
         onDoubleClick={handleTitleBarDoubleClick}
       >
-        {/* Traffic lights */}
+        {/* Classic Aqua traffic lights */}
         <div className="flex gap-2 mr-4">
           <button
             onClick={(e) => {
               e.stopPropagation()
               closeWindow(window.id)
             }}
-            className="w-3 h-3 rounded-full bg-[#ff5f57] hover:bg-[#ff3b30] transition-colors flex items-center justify-center group"
-            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
+            className="w-3 h-3 rounded-full flex items-center justify-center group relative"
+            style={{ 
+              background: 'linear-gradient(135deg, #ff5f52 0%, #ff3b30 100%)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+              border: '0.5px solid rgba(0,0,0,0.2)',
+            }}
           >
-            <span className="text-[8px] text-[#4d0000] opacity-0 group-hover:opacity-100">✕</span>
+            <span 
+              className="text-[7px] text-[#8b0000] opacity-0 group-hover:opacity-100 font-bold"
+              style={{ textShadow: '0 0.5px 0 rgba(255,255,255,0.3)' }}
+            >
+              ✕
+            </span>
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
               updateWindow(window.id, { minimized: true })
             }}
-            className="w-3 h-3 rounded-full bg-[#febc2e] hover:bg-[#ff9500] transition-colors flex items-center justify-center group"
-            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
+            className="w-3 h-3 rounded-full flex items-center justify-center group"
+            style={{ 
+              background: 'linear-gradient(135deg, #ffbd2e 0%, #ff9500 100%)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+              border: '0.5px solid rgba(0,0,0,0.2)',
+            }}
           >
-            <span className="text-[8px] text-[#995700] opacity-0 group-hover:opacity-100">−</span>
+            <span 
+              className="text-[7px] text-[#995700] opacity-0 group-hover:opacity-100 font-bold"
+              style={{ textShadow: '0 0.5px 0 rgba(255,255,255,0.3)' }}
+            >
+              −
+            </span>
           </button>
           <button
             onClick={(e) => {
               e.stopPropagation()
               updateWindow(window.id, { maximized: !window.maximized })
             }}
-            className="w-3 h-3 rounded-full bg-[#28c840] hover:bg-[#00c853] transition-colors flex items-center justify-center group"
-            style={{ boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.1)' }}
+            className="w-3 h-3 rounded-full flex items-center justify-center group"
+            style={{ 
+              background: 'linear-gradient(135deg, #28cd41 0%, #1aab29 100%)',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+              border: '0.5px solid rgba(0,0,0,0.2)',
+            }}
           >
-            <span className="text-[8px] text-[#006400] opacity-0 group-hover:opacity-100">⤢</span>
+            <span 
+              className="text-[7px] text-[#006400] opacity-0 group-hover:opacity-100 font-bold"
+              style={{ textShadow: '0 0.5px 0 rgba(255,255,255,0.3)' }}
+            >
+              +
+            </span>
           </button>
         </div>
         
         {/* Title */}
         <span 
-          className="flex-1 text-center text-[13px] font-medium text-gray-700 truncate"
-          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif' }}
+          className="flex-1 text-center text-[13px] font-bold truncate"
+          style={{ 
+            color: '#333',
+            fontFamily: '"Lucida Grande", sans-serif',
+            textShadow: '0 1px 0 rgba(255,255,255,0.8)',
+          }}
         >
           {window.title}
         </span>
@@ -207,14 +246,14 @@ export default function Window({ window, children }: WindowProps) {
       {/* Resize Handles */}
       {!window.maximized && (
         <>
-          <div className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'top')} />
-          <div className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
-          <div className="absolute top-0 bottom-0 left-0 w-1 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'left')} />
-          <div className="absolute top-0 bottom-0 right-0 w-1 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'right')} />
-          <div className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
-          <div className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
-          <div className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-          <div className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+          <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'top')} />
+          <div className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
+          <div className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'left')} />
+          <div className="absolute top-0 bottom-0 right-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'right')} />
+          <div className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
+          <div className="absolute top-0 right-0 w-4 h-4 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
+          <div className="absolute bottom-0 left-0 w-4 h-4 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
+          <div className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
         </>
       )}
     </motion.div>
