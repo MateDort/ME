@@ -40,7 +40,16 @@ const componentMap: Record<string, React.ComponentType<any>> = {
 }
 
 // Apps that require authentication
-const restrictedApps = ['music', 'health', 'notion']
+const restrictedApps = [
+  'music',
+  'health',
+  'notion',
+  'calendar',
+  'maps',
+  'skillshipping',
+  'neuranote',
+  'doorman',
+]
 
 export default function WindowManager() {
   const { windows, isAuthenticated, closeWindow } = useOSStore()

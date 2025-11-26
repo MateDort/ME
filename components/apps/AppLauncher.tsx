@@ -8,17 +8,17 @@ const allApps = [
   { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm', requiresAuth: false },
   { id: 'finder', title: 'Finder', icon: '📁', description: 'File manager', component: 'finder', requiresAuth: false },
   { id: 'notion', title: 'Notion', icon: '🧱', description: 'Docs & blocks workspace', component: 'notion', requiresAuth: true },
-  { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar', requiresAuth: false },
-  { id: 'maps', title: 'Maps', icon: '🗺️', description: 'Navigation & places', component: 'maps', requiresAuth: false },
+  { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar', requiresAuth: true },
+  { id: 'maps', title: 'Maps', icon: '🗺️', description: 'Navigation & places', component: 'maps', requiresAuth: true },
   { id: 'music', title: 'iTunes', icon: '🎵', description: 'Music player', component: 'music', requiresAuth: true },
   { id: 'search', title: 'Safari', icon: '🔍', description: 'Web browser', component: 'search', requiresAuth: false },
   { id: 'news', title: 'News', icon: '📰', description: 'Personalized news', component: 'news', requiresAuth: false },
   { id: 'health', title: 'Health', icon: '🏃', description: 'Health insights', component: 'health', requiresAuth: true },
   { id: 'language', title: 'Language', icon: '🌍', description: 'Learn languages', component: 'language', requiresAuth: false },
   { id: 'piano', title: 'GarageBand', icon: '🎹', description: 'Play piano', component: 'piano', requiresAuth: false },
-  { id: 'skillshipping', title: 'SkillShipping', icon: '📦', description: 'Track skills', component: 'skillshipping', requiresAuth: false },
-  { id: 'neuranote', title: 'NeuraNote', icon: '🧠', description: 'AI notes', component: 'neuranote', requiresAuth: false },
-  { id: 'doorman', title: 'AI Doorman', icon: '🚪', description: 'Smart security', component: 'doorman', requiresAuth: false },
+  { id: 'skillshipping', title: 'SkillShipping', icon: '📦', description: 'Track skills', component: 'skillshipping', requiresAuth: true },
+  { id: 'neuranote', title: 'NeuraNote', icon: '🧠', description: 'AI notes', component: 'neuranote', requiresAuth: true },
+  { id: 'doorman', title: 'AI Doorman', icon: '🚪', description: 'Smart security', component: 'doorman', requiresAuth: true },
 ]
 
 export default function AppLauncher() {
