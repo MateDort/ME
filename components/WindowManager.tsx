@@ -16,6 +16,7 @@ import MapsApp from './apps/MapsApp'
 import SkillShippingApp from './apps/SkillShippingApp'
 import NeuraNoteApp from './apps/NeuraNoteApp'
 import AIDoormanApp from './apps/AIDoormanApp'
+import FinderApp from './apps/FinderApp'
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   messages: MessagesApp,
@@ -32,6 +33,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   skillshipping: SkillShippingApp,
   neuranote: NeuraNoteApp,
   doorman: AIDoormanApp,
+  finder: FinderApp,
   blank: () => <div className="w-full h-full flex items-center justify-center text-gray-500">Empty Window</div>,
 }
 

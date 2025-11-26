@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 const allApps = [
   { id: 'messages', title: 'Messages', icon: '💬', description: 'Chat with Emese AI', component: 'messages' },
   { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm' },
+  { id: 'finder', title: 'Finder', icon: '📁', description: 'File manager', component: 'finder' },
   { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar' },
   { id: 'maps', title: 'Maps', icon: '🗺️', description: 'Navigation & places', component: 'maps' },
   { id: 'music', title: 'iTunes', icon: '🎵', description: 'Music player', component: 'music' },

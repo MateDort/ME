@@ -213,30 +213,6 @@ export default function OSDesktop() {
             Macintosh HD
           </span>
         </motion.div>
-        
-        <motion.div 
-          className="flex flex-col items-center cursor-pointer group"
-          whileHover={{ scale: 1.05 }}
-        >
-          <div 
-            className="w-20 h-18 rounded-lg flex items-center justify-center"
-            style={{
-              background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(220,220,220,0.8) 100%)',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.8)',
-              border: '1px solid rgba(255,255,255,0.5)',
-            }}
-          >
-            <span className="text-4xl">🗑️</span>
-          </div>
-          <span 
-            className="text-white text-sm mt-2 px-3 py-1 rounded font-bold"
-            style={{ 
-              textShadow: '0 1px 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5)',
-            }}
-          >
-            Trash
-          </span>
-        </motion.div>
       </div>
       
       <MenuBar timeIcon={timeIcons[timeOfDay]} />

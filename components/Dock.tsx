@@ -7,10 +7,9 @@ const apps = [
   { id: 'launcher', title: 'Launchpad', icon: '🚀', component: 'launcher' },
   { id: 'messages', title: 'Messages', icon: '💬', component: 'messages' },
   { id: 'brainstorm', title: 'Brainstorm', icon: '💡', component: 'brainstorm' },
-  { id: 'calendar', title: 'Calendar', icon: '📅', component: 'calendar' },
-  { id: 'music', title: 'iTunes', icon: '🎵', component: 'music' },
   { id: 'search', title: 'Safari', icon: '🔍', component: 'search' },
-  { id: 'news', title: 'News', icon: '📰', component: 'news' },
+  { id: 'music', title: 'iTunes', icon: '🎵', component: 'music' },
+  { id: 'finder', title: 'Finder', icon: '📁', component: 'finder' },
 ]
 
 export default function Dock() {
