@@ -26,7 +26,7 @@ function isScreenLocked(): boolean {
   const minutes = now.getMinutes()
   const currentMinutes = hours * 60 + minutes
   
-  const lockStart = 19 * 60 + 30
+  const lockStart = 21 * 60 + 30
   const lockEnd = 5 * 60
   
   return currentMinutes >= lockStart || currentMinutes < lockEnd

@@ -12,6 +12,13 @@ export async function GET(req: NextRequest) {
   const storedState = req.cookies.get('spotify_auth_state')?.value
   const error = req.nextUrl.searchParams.get('error')
 
+  console.log('Spotify Callback - State check:', {
+    receivedState: state,
+    storedState: storedState,
+    matches: state === storedState,
+    hasCode: !!code,
+  })
+
   const buildRedirect = (path: string) => {
     const url = new URL(path, req.nextUrl.origin)
     return NextResponse.redirect(url)
@@ -22,6 +29,7 @@ export async function GET(req: NextRequest) {
   }
 
   if (!code || !state || state !== storedState) {
+    console.error('Spotify state mismatch or missing data')
     return buildRedirect('/?error=invalid_state')
   }
 

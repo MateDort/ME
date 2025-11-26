@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic()
+import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
 
 const EMESE_SYSTEM_PROMPT = `You are Emese, a friendly and helpful AI assistant living in MEOS (Máté's personal operating system). You're knowledgeable, witty, and always eager to help.
 
@@ -36,7 +34,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 })
     }
 
-    const response = await anthropic.messages.create({
+    const claude = getClaudeClient()
+
+    const response = await claude.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 1024,
       system: EMESE_SYSTEM_PROMPT,
@@ -53,9 +53,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ response: responseText })
   } catch (error: any) {
-    console.error('Emese API error:', error)
+    const { message: errorMessage, details } = handleClaudeError(error)
+    console.error('Emese API error:', errorMessage, details)
     return NextResponse.json(
-      { response: "I'm having trouble thinking right now. Please try again!" },
+      { response: "I'm having trouble thinking right now. Please try again! 💭" },
       { status: 500 }
     )
   }

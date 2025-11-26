@@ -48,8 +48,11 @@ export async function GET(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
+    path: '/',
     maxAge: 600, // 10 minutes
   })
+  
+  console.log('Spotify Auth - State stored:', state)
 
   return response
 }

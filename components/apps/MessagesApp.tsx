@@ -68,13 +68,11 @@ export default function MessagesApp() {
     scrollToBottom()
   }, [activeChat?.messages])
 
-  // Load chats from localStorage
   useEffect(() => {
     const savedChats = localStorage.getItem('meos_messages_chats')
     if (savedChats) {
       try {
         const parsed = JSON.parse(savedChats)
-        // Restore Date objects
         parsed.forEach((chat: Chat) => {
           chat.messages.forEach((msg: Message) => {
             msg.timestamp = new Date(msg.timestamp)
@@ -87,7 +85,6 @@ export default function MessagesApp() {
     }
   }, [])
 
-  // Save chats to localStorage
   useEffect(() => {
     localStorage.setItem('meos_messages_chats', JSON.stringify(chats))
   }, [chats])
@@ -154,11 +151,8 @@ export default function MessagesApp() {
       let response: string = "Let me think about that..."
 
       if (activeChatId === 'me') {
-        // Self-reflection mode - just acknowledge
         response = "I've noted that down. Keep reflecting! 📝"
       } else {
-        // Emese AI assistant
-        // Check for app commands
         const appKeywords = ['open', 'launch', 'start', 'show']
         const lowerInput = userInput.toLowerCase()
         let openedApp = false
@@ -180,7 +174,6 @@ export default function MessagesApp() {
         }
 
         if (!openedApp) {
-          // Call Emese API
           const res = await fetch('/api/emese', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -227,7 +220,6 @@ export default function MessagesApp() {
 
   return (
     <div className="h-full flex">
-      {/* Sidebar - Chat List - Aqua Style */}
       <div 
         className="w-60 flex flex-col"
         style={{
@@ -235,7 +227,6 @@ export default function MessagesApp() {
           borderRight: '1px solid rgba(0,0,0,0.2)',
         }}
       >
-        {/* Sidebar Header */}
         <div 
           className="px-4 py-3"
           style={{
@@ -258,10 +249,9 @@ export default function MessagesApp() {
           </div>
         </div>
         
-        {/* Chat List */}
         <div className="flex-1 overflow-y-auto py-2">
           {chats.map((chat) => (
-            <motion.button
+            <button
               key={chat.id}
               onClick={() => setActiveChatId(chat.id)}
               className="w-full text-left px-3 py-3 transition-all"
@@ -272,9 +262,17 @@ export default function MessagesApp() {
                 borderTop: activeChatId === chat.id ? '1px solid rgba(255,255,255,0.3)' : 'none',
                 borderBottom: activeChatId === chat.id ? '1px solid rgba(0,0,0,0.2)' : '1px solid rgba(0,0,0,0.05)',
               }}
-              whileHover={{ 
-                x: 2,
-                background: activeChatId !== chat.id ? 'rgba(81,149,229,0.1)' : undefined
+              onMouseEnter={(e) => {
+                if (activeChatId !== chat.id) {
+                  e.currentTarget.style.background = 'rgba(81,149,229,0.1)'
+                  e.currentTarget.style.transform = 'translateX(2px)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (activeChatId !== chat.id) {
+                  e.currentTarget.style.background = 'transparent'
+                  e.currentTarget.style.transform = 'translateX(0)'
+                }
               }}
             >
               <div className="flex items-center gap-3">
@@ -322,11 +320,10 @@ export default function MessagesApp() {
                   {chat.messages[chat.messages.length - 1].text.substring(0, 35)}...
                 </div>
               )}
-            </motion.button>
+            </button>
           ))}
         </div>
         
-        {/* Sidebar Footer */}
         <div 
           className="p-3 text-center"
           style={{
@@ -347,9 +344,7 @@ export default function MessagesApp() {
         </div>
       </div>
       
-      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
-        {/* Chat Header - Aqua Style */}
         <div 
           className="px-5 py-3 flex items-center gap-3"
           style={{
@@ -390,7 +385,6 @@ export default function MessagesApp() {
           </div>
         </div>
 
-        {/* Messages - iChat style bubbles */}
         <div 
           className="flex-1 overflow-y-auto p-6 space-y-3"
           style={{
@@ -405,7 +399,7 @@ export default function MessagesApp() {
               className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[70%] px-4 py-2.5 rounded-2xl`}
+                className="max-w-[70%] px-4 py-2.5 rounded-2xl"
                 style={{
                   fontFamily: '"Lucida Grande", sans-serif',
                   fontSize: '13px',
@@ -469,7 +463,6 @@ export default function MessagesApp() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input - Aqua Style */}
         <div 
           className="p-4"
           style={{
