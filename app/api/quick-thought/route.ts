@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MATE_PROFILE } from '@/lib/mate-profile'
-import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
+import { callLLMWithFallback } from '@/lib/llm-client'
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,37 +41,31 @@ Examples:
 
 I only include actions if they make sense. If it's just a thought/reflection, I return empty actions array.`
 
-    const response = await claude.messages.create({
-      model: 'claude-3-haiku-20240307',
-      max_tokens: 500,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const llmResponse = await callLLMWithFallback(prompt, undefined, {
+      maxTokens: 500,
+      temperature: 0.8,
     })
 
-    const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
+    console.log(`Quick thought answered using: ${llmResponse.model}`)
 
     // Parse JSON response
     let result
     try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      const jsonMatch = llmResponse.text.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         result = JSON.parse(jsonMatch[0])
       } else {
-        result = { response: text, actions: [] }
+        result = { response: llmResponse.text, actions: [] }
       }
     } catch (e) {
-      result = { response: text, actions: [] }
+      result = { response: llmResponse.text, actions: [] }
     }
 
     return NextResponse.json(result)
   } catch (error: any) {
-    const { message } = handleClaudeError(error)
+    console.error('Quick thought API error:', error)
     return NextResponse.json(
-      { response: `Error: ${message}. Please check your API key.`, actions: [] },
+      { response: `Error: Could not process your thought. Please try again.`, actions: [] },
       { status: 200 }
     )
   }

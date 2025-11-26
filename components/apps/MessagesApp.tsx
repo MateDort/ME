@@ -51,14 +51,42 @@ const INITIAL_CHATS: Chat[] = [
 ]
 
 export default function MessagesApp() {
-  const [chats, setChats] = useState<Chat[]>(INITIAL_CHATS)
   const [activeChatId, setActiveChatId] = useState('emese')
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { addWindow, windows } = useOSStore()
+  const { 
+    addWindow, 
+    windows, 
+    emeseMessages, 
+    meMessages, 
+    addEmeseMessage, 
+    addMeMessage,
+    updateWindow,
+    closeWindow
+  } = useOSStore()
 
-  const activeChat = chats.find((c) => c.id === activeChatId) || chats[0]
+  // Initialize chats if empty
+  useEffect(() => {
+    if (emeseMessages.length === 0) {
+      addEmeseMessage({
+        id: '1',
+        text: "Hello! I'm Emese, your AI assistant with full control over MEOS. I can open apps, control music, check your health data, manage your calendar, and much more. What would you like to do?",
+        sender: 'assistant',
+        timestamp: new Date(),
+      })
+    }
+    if (meMessages.length === 0) {
+      addMeMessage({
+        id: '1',
+        text: 'This is your personal space for self-reflection and journaling. Talk to yourself as Máté - ask questions, work through problems, or just think out loud.',
+        sender: 'assistant',
+        timestamp: new Date(),
+      })
+    }
+  }, [])
+
+  const activeMessages = activeChatId === 'emese' ? emeseMessages : meMessages
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -66,157 +94,186 @@ export default function MessagesApp() {
 
   useEffect(() => {
     scrollToBottom()
-  }, [activeChat?.messages])
+  }, [activeMessages])
 
-  useEffect(() => {
-    const savedChats = localStorage.getItem('meos_messages_chats')
-    if (savedChats) {
-      try {
-        const parsed = JSON.parse(savedChats)
-        parsed.forEach((chat: Chat) => {
-          chat.messages.forEach((msg: Message) => {
-            msg.timestamp = new Date(msg.timestamp)
-          })
-        })
-        setChats(parsed)
-      } catch (e) {
-        console.error('Failed to load chats:', e)
+  const executeAction = (action: any) => {
+    const appMap: Record<string, { title: string; component: string }> = {
+      music: { title: 'iTunes', component: 'music' },
+      search: { title: 'Safari', component: 'search' },
+      messages: { title: 'Messages', component: 'messages' },
+      brainstorm: { title: 'Brainstorm', component: 'brainstorm' },
+      calendar: { title: 'Calendar', component: 'calendar' },
+      maps: { title: 'Maps', component: 'maps' },
+      news: { title: 'News', component: 'news' },
+      health: { title: 'Health', component: 'health' },
+      finder: { title: 'Finder', component: 'finder' },
+      notebook: { title: 'Notebook', component: 'notebook' },
+      launcher: { title: 'Launchpad', component: 'launcher' },
+      skillshipping: { title: 'SkillShipping', component: 'skillshipping' },
+      neuranote: { title: 'NeuraNote', component: 'neuranote' },
+      doorman: { title: 'AI Doorman', component: 'doorman' },
+      piano: { title: 'GarageBand', component: 'piano' },
+      language: { title: 'Language', component: 'language' },
+    }
+
+    switch (action.type) {
+      case 'open_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const existingWindow = windows.find(w => w.component === appInfo.component)
+          if (!existingWindow) {
+            addWindow({
+              id: `${appInfo.component}-${Date.now()}`,
+              title: appInfo.title,
+              component: appInfo.component,
+              x: 100 + Math.random() * 100,
+              y: 100 + Math.random() * 100,
+              width: 800,
+              height: 600,
+              minimized: false,
+              maximized: false,
+            })
+          }
+        }
+        break
+      }
+      case 'close_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToClose = windows.find(w => w.component === appInfo.component)
+          if (windowToClose) {
+            closeWindow(windowToClose.id)
+          }
+        }
+        break
+      }
+      case 'minimize_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToMinimize = windows.find(w => w.component === appInfo.component)
+          if (windowToMinimize) {
+            updateWindow(windowToMinimize.id, { minimized: true })
+          }
+        }
+        break
+      }
+      case 'maximize_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToMaximize = windows.find(w => w.component === appInfo.component)
+          if (windowToMaximize) {
+            updateWindow(windowToMaximize.id, { maximized: true })
+          }
+        }
+        break
       }
     }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('meos_messages_chats', JSON.stringify(chats))
-  }, [chats])
-
-  const handleOpenApp = (appName: string) => {
-    const appMap: Record<string, { title: string; component: string; icon: string }> = {
-      'brainstorm': { title: 'Brainstorm', component: 'brainstorm', icon: '💡' },
-      'calendar': { title: 'Calendar', component: 'calendar', icon: '📅' },
-      'maps': { title: 'Maps', component: 'maps', icon: '🗺️' },
-      'music': { title: 'Music', component: 'music', icon: '🎵' },
-      'news': { title: 'News', component: 'news', icon: '📰' },
-      'health': { title: 'Health', component: 'health', icon: '🏃' },
-      'search': { title: 'Google', component: 'search', icon: '🔍' },
-      'skillshipping': { title: 'SkillShipping', component: 'skillshipping', icon: '📦' },
-      'neuranote': { title: 'NeuraNote', component: 'neuranote', icon: '🧠' },
-      'doorman': { title: 'AI Doorman', component: 'doorman', icon: '🚪' },
-      'piano': { title: 'Piano', component: 'piano', icon: '🎹' },
-      'language': { title: 'Language', component: 'language', icon: '🌍' },
-    }
-
-    const app = appMap[appName.toLowerCase()]
-    if (app) {
-      const existingWindow = windows.find((w) => w.component === app.component)
-      if (!existingWindow) {
-        addWindow({
-          id: `${app.component}-${Date.now()}`,
-          title: app.title,
-          component: app.component,
-          x: 100 + Math.random() * 200,
-          y: 40 + Math.random() * 200,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
-      }
-      return true
-    }
-    return false
   }
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: input,
+    const userInput = input.trim()
+    const addMessage = activeChatId === 'emese' ? addEmeseMessage : addMeMessage
+
+    // Add user message
+    addMessage({
+      id: `user-${Date.now()}`,
+      text: userInput,
       sender: 'me',
       timestamp: new Date(),
-    }
+    })
 
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? { ...chat, messages: [...chat.messages, userMessage] }
-          : chat
-      )
-    )
-    const userInput = input
     setInput('')
     setIsLoading(true)
 
     try {
-      let response: string = "Let me think about that..."
+      let responseText: string = ''
+      let actions: any[] = []
+      let widgets: any[] = []
 
       if (activeChatId === 'me') {
-        response = "I've noted that down. Keep reflecting! 📝"
+        // @Me agent - acts as Máté for self-reflection
+        const res = await fetch('/api/emese', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: `You are Máté, talking to yourself. This is self-reflection. The user said: "${userInput}". Respond as if you're having an internal dialogue with yourself - thoughtful, honest, and introspective.`,
+            context: { mode: 'self-reflection' }
+          }),
+        })
+        const data = await res.json()
+        responseText = data.message || data.response || "Hmm, let me think about that..."
       } else {
-        const appKeywords = ['open', 'launch', 'start', 'show']
-        const lowerInput = userInput.toLowerCase()
-        let openedApp = false
-
-        for (const keyword of appKeywords) {
-          if (lowerInput.includes(keyword)) {
-            const apps = ['brainstorm', 'calendar', 'maps', 'music', 'news', 'health', 'search', 'skillshipping', 'neuranote', 'doorman', 'piano', 'language']
-            for (const app of apps) {
-              if (lowerInput.includes(app)) {
-                openedApp = handleOpenApp(app)
-                if (openedApp) {
-                  response = `Opening ${app.charAt(0).toUpperCase() + app.slice(1)} for you! ✨`
-                  break
-                }
-              }
-            }
-            if (openedApp) break
-          }
+        // Emese agent - full OS control
+        const context = {
+          openApps: windows.map(w => ({ component: w.component, title: w.title })),
+          time: new Date().toISOString(),
+          activeChatId,
         }
 
-        if (!openedApp) {
-          const res = await fetch('/api/emese', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: userInput }),
+        const res = await fetch('/api/emese', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            message: userInput,
+            context 
+          }),
+        })
+        const data = await res.json()
+        responseText = data.message || data.response || "Let me think about that..."
+        actions = data.actions || []
+        widgets = data.widgets || []
+
+        // Execute actions
+        if (actions.length > 0) {
+          actions.forEach((action: any) => {
+            executeAction(action)
           })
-          const data = await res.json()
-          response = data.response || "Let me think about that..."
         }
       }
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response,
+      // Add assistant response
+      addMessage({
+        id: `assistant-${Date.now()}`,
+        text: responseText,
         sender: 'assistant',
         timestamp: new Date(),
-      }
-
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChatId
-            ? { ...chat, messages: [...chat.messages, assistantMessage] }
-            : chat
-        )
-      )
+        actions,
+        widgets,
+      })
     } catch (error) {
       console.error('Error getting response:', error)
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      const errorMessage = {
+        id: `error-${Date.now()}`,
         text: "Sorry, I couldn't process that. Please try again.",
-        sender: 'assistant',
+        sender: 'assistant' as const,
         timestamp: new Date(),
       }
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChatId
-            ? { ...chat, messages: [...chat.messages, errorMessage] }
-            : chat
-        )
-      )
+      addMessage(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
+
+  const chats = [
+    {
+      id: 'me',
+      name: '@Me',
+      icon: '💭',
+      description: 'Self-reflection & journaling',
+      messages: meMessages,
+    },
+    {
+      id: 'emese',
+      name: 'Emese',
+      icon: '✨',
+      description: 'Your AI assistant',
+      messages: emeseMessages,
+    },
+  ]
+
+  const activeChat = chats.find((c) => c.id === activeChatId) || chats[1]
 
   return (
     <div className="h-full flex">
@@ -428,7 +485,7 @@ export default function MessagesApp() {
                     color: message.sender === 'me' ? 'rgba(255,255,255,0.9)' : '#666',
                   }}
                 >
-                  {message.timestamp.toLocaleTimeString()}
+                  {new Date(message.timestamp).toLocaleTimeString()}
                 </p>
               </div>
             </motion.div>

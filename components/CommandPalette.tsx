@@ -16,9 +16,10 @@ export default function CommandPalette() {
   const [response, setResponse] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [actions, setActions] = useState<Action[]>([])
+  const [widgets, setWidgets] = useState<any[]>([])
   const inputRef = useRef<HTMLInputElement>(null)
   const lastKeyPressRef = useRef<number>(0)
-  const { addWindow } = useOSStore()
+  const { addWindow, addEmeseMessage, windows, updateWindow, closeWindow } = useOSStore()
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -54,23 +55,58 @@ export default function CommandPalette() {
   const handleSubmit = async () => {
     if (!input.trim() || isLoading) return
 
+    const userMessage = input.trim()
     setIsLoading(true)
     setResponse('')
     setActions([])
+    setWidgets([])
+
+    // Add user message to Emese chat in Messages app
+    addEmeseMessage({
+      id: `user-${Date.now()}`,
+      text: userMessage,
+      sender: 'me',
+      timestamp: new Date(),
+    })
 
     try {
-      const res = await fetch('/api/quick-thought', {
+      // Build context about current OS state
+      const context = {
+        openApps: windows.map(w => w.component),
+        time: new Date().toISOString(),
+      }
+
+      const res = await fetch('/api/emese', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ thought: input }),
+        body: JSON.stringify({ 
+          message: userMessage,
+          context 
+        }),
       })
 
       const data = await res.json()
-      setResponse(data.response || '')
+      const responseText = data.message || data.response || ''
+      const responseActions = data.actions || []
+      const responseWidgets = data.widgets || []
       
-      if (data.actions && data.actions.length > 0) {
-        setActions(data.actions)
-        data.actions.forEach((action: Action) => {
+      setResponse(responseText)
+      setActions(responseActions)
+      setWidgets(responseWidgets)
+      
+      // Add assistant response to Emese chat in Messages app
+      addEmeseMessage({
+        id: `assistant-${Date.now()}`,
+        text: responseText,
+        sender: 'assistant',
+        timestamp: new Date(),
+        actions: responseActions,
+        widgets: responseWidgets,
+      })
+
+      // Execute actions
+      if (responseActions && responseActions.length > 0) {
+        responseActions.forEach((action: any) => {
           executeAction(action)
         })
       }
@@ -79,65 +115,120 @@ export default function CommandPalette() {
     } catch (error) {
       console.error('Error:', error)
       setResponse('Something went wrong. Try again.')
+      
+      // Add error message to chat
+      addEmeseMessage({
+        id: `error-${Date.now()}`,
+        text: 'Sorry, I had trouble processing that. Please try again.',
+        sender: 'assistant',
+        timestamp: new Date(),
+      })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const executeAction = (action: Action) => {
+  const executeAction = (action: any) => {
+    const appMap: Record<string, { title: string; component: string }> = {
+      music: { title: 'iTunes', component: 'music' },
+      search: { title: 'Safari', component: 'search' },
+      messages: { title: 'Messages', component: 'messages' },
+      brainstorm: { title: 'Brainstorm', component: 'brainstorm' },
+      calendar: { title: 'Calendar', component: 'calendar' },
+      maps: { title: 'Maps', component: 'maps' },
+      news: { title: 'News', component: 'news' },
+      health: { title: 'Health', component: 'health' },
+      finder: { title: 'Finder', component: 'finder' },
+      notebook: { title: 'Notebook', component: 'notebook' },
+      launcher: { title: 'Launchpad', component: 'launcher' },
+    }
+
     switch (action.type) {
-      case 'music':
-        addWindow({
-          id: `music-${Date.now()}`,
-          title: 'Music',
-          component: 'music',
-          x: 100,
-          y: 100,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
+      case 'open_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const existingWindow = windows.find(w => w.component === appInfo.component)
+          if (!existingWindow) {
+            addWindow({
+              id: `${appInfo.component}-${Date.now()}`,
+              title: appInfo.title,
+              component: appInfo.component,
+              x: 100 + Math.random() * 100,
+              y: 100 + Math.random() * 100,
+              width: 800,
+              height: 600,
+              minimized: false,
+              maximized: false,
+            })
+          }
+        }
         break
+      }
+      case 'close_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToClose = windows.find(w => w.component === appInfo.component)
+          if (windowToClose) {
+            closeWindow(windowToClose.id)
+          }
+        }
+        break
+      }
+      case 'minimize_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToMinimize = windows.find(w => w.component === appInfo.component)
+          if (windowToMinimize) {
+            updateWindow(windowToMinimize.id, { minimized: true })
+          }
+        }
+        break
+      }
+      case 'maximize_app': {
+        const appInfo = appMap[action.app]
+        if (appInfo) {
+          const windowToMaximize = windows.find(w => w.component === appInfo.component)
+          if (windowToMaximize) {
+            updateWindow(windowToMaximize.id, { maximized: true })
+          }
+        }
+        break
+      }
+      case 'play_music':
+      case 'pause_music':
+      case 'skip_track':
+      case 'previous_track':
+        // These will be handled by the Music app directly
+        console.log('Music control:', action.type)
+        break
+      // Legacy support
+      case 'music':
       case 'video':
       case 'search':
-        addWindow({
-          id: `search-${Date.now()}`,
-          title: 'Safari',
-          component: 'search',
-          x: 100,
-          y: 100,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
-        break
       case 'message':
-        addWindow({
-          id: `messages-${Date.now()}`,
-          title: 'Messages',
-          component: 'messages',
-          x: 100,
-          y: 100,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
-        break
       case 'note':
-        addWindow({
-          id: `brainstorm-${Date.now()}`,
-          title: 'Brainstorm',
-          component: 'brainstorm',
-          x: 100,
-          y: 100,
-          width: 800,
-          height: 600,
-          minimized: false,
-          maximized: false,
-        })
+        const legacyMap: Record<string, string> = {
+          music: 'music',
+          video: 'search',
+          search: 'search',
+          message: 'messages',
+          note: 'brainstorm',
+        }
+        const legacyApp = legacyMap[action.type]
+        if (legacyApp && appMap[legacyApp]) {
+          const appInfo = appMap[legacyApp]
+          addWindow({
+            id: `${appInfo.component}-${Date.now()}`,
+            title: appInfo.title,
+            component: appInfo.component,
+            x: 100,
+            y: 100,
+            width: 800,
+            height: 600,
+            minimized: false,
+            maximized: false,
+          })
+        }
         break
     }
   }

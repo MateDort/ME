@@ -5,7 +5,7 @@ const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID
 // Common options: http://localhost:3000/api/spotify/callback or http://127.0.0.1:3000/api/spotify/callback
 const SPOTIFY_REDIRECT_URI =
   process.env.SPOTIFY_REDIRECT_URI || 'http://localhost:3000/api/spotify/callback'
-const SPOTIFY_SCOPE = 'playlist-read-private user-modify-playback-state streaming user-read-playback-state'
+const SPOTIFY_SCOPE = 'playlist-read-private user-modify-playback-state streaming user-read-playback-state user-read-email user-read-private'
 
 export async function GET(req: NextRequest) {
   if (!SPOTIFY_CLIENT_ID) {

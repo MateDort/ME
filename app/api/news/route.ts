@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import axios from 'axios'
 import { MATE_PROFILE } from '@/lib/mate-profile'
 import { formatPlainText } from '@/lib/format-response'
-import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
+import { callLLMWithFallback } from '@/lib/llm-client'
 
 const SERPER_API_KEY = process.env.NEXT_PUBLIC_SERPER_API_KEY || process.env.SERPER_API_KEY
 
@@ -62,29 +62,22 @@ export async function GET() {
       new Map(allArticles.map((item) => [item.link, item])).values()
     ).slice(0, 15)
 
-    // Have AI summarize each article
+    // Have AI summarize each article with fallback
     const summarizedArticles = await Promise.all(
       uniqueArticles.map(async (article) => {
         try {
-          const claude = getClaudeClient()
-          const summaryResponse = await claude.messages.create({
-            model: 'claude-3-haiku-20240307',
-            max_tokens: 150,
-            messages: [
-              {
-                role: 'user',
-                content: `${MATE_PROFILE}\n\nI summarize this news article in 2-3 sentences. I focus on what the article is about, not my personal feelings about it. I keep it concise and factual:\n\nTitle: ${article.title}\n\nSnippet: ${article.snippet}
+          const prompt = `${MATE_PROFILE}\n\nI summarize this news article in 2-3 sentences. I focus on what the article is about, not my personal feelings about it. I keep it concise and factual:\n\nTitle: ${article.title}\n\nSnippet: ${article.snippet}
 
-IMPORTANT: Write in plain text. NEVER use markdown formatting like *** or ** or __. Focus on summarizing the article content, not expressing personal opinions about why I would like it.`,
-              },
-            ],
+IMPORTANT: Write in plain text. NEVER use markdown formatting like *** or ** or __. Focus on summarizing the article content, not expressing personal opinions about why I would like it.`
+
+          const llmResponse = await callLLMWithFallback(prompt, undefined, {
+            maxTokens: 150,
+            temperature: 0.7,
           })
-
-          const rawSummary = summaryResponse.content[0].type === 'text' ? summaryResponse.content[0].text : article.snippet
 
           return {
             ...article,
-            summary: formatPlainText(rawSummary).trim(),
+            summary: formatPlainText(llmResponse.text).trim(),
           }
         } catch (error) {
           console.error('Error summarizing article:', error)

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer'
 
 interface Track {
   id: string
@@ -30,7 +31,50 @@ export default function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackProgress, setPlaybackProgress] = useState(0)
   const [screenMode, setScreenMode] = useState<ScreenMode>('now_playing')
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [playerDeviceId, setPlayerDeviceId] = useState<string | null>(null)
   const isPlaybackPendingRef = useRef(false)
+
+  // Initialize Spotify Web Playback SDK
+  const {
+    isReady: isPlayerReady,
+    deviceId,
+    play: playerPlay,
+    togglePlay: playerTogglePlay,
+    nextTrack: playerNextTrack,
+    previousTrack: playerPreviousTrack,
+    setVolume: playerSetVolume,
+    getVolume: playerGetVolume,
+  } = useSpotifyPlayer({
+    accessToken,
+    onReady: (deviceId) => {
+      console.log('MEOS Player ready! Device ID:', deviceId)
+      setPlayerDeviceId(deviceId)
+      // Check volume after a short delay
+      setTimeout(async () => {
+        if (playerGetVolume) {
+          const vol = await playerGetVolume()
+          console.log('Current volume after ready:', vol * 100 + '%')
+        }
+      }, 1000)
+    },
+    onPlayerStateChange: (state) => {
+      if (state) {
+        console.log('Playback state:', { paused: state.paused, position: state.position })
+        setIsPlaying(!state.paused)
+        setPlaybackProgress((state.position / state.duration) * 100)
+        setCurrentTrack({
+          id: state.track_window.current_track.id,
+          title: state.track_window.current_track.name,
+          artist: state.track_window.current_track.artists
+            .map((a) => a.name)
+            .join(', '),
+          duration: formatDuration(state.track_window.current_track.duration_ms),
+          image: state.track_window.current_track.album.images[0]?.url,
+        })
+      }
+    },
+  })
 
   useEffect(() => {
     checkAuth()
@@ -39,15 +83,16 @@ export default function MusicPlayer() {
   useEffect(() => {
     if (isAuthenticated) {
       loadPlaylists()
-      const cleanup = startStatusPolling()
-      return cleanup
     }
   }, [isAuthenticated])
 
   const checkAuth = async () => {
     try {
-      const response = await fetch('/api/spotify/playlists')
-      if (response.ok) {
+      // Get access token
+      const tokenResponse = await fetch('/api/spotify/token')
+      if (tokenResponse.ok) {
+        const tokenData = await tokenResponse.json()
+        setAccessToken(tokenData.accessToken)
         setIsAuthenticated(true)
         loadPlaylists()
       } else {
@@ -98,41 +143,6 @@ export default function MusicPlayer() {
     return []
   }
 
-  const startStatusPolling = () => {
-    const interval = setInterval(async () => {
-      // Don't update from status if we just initiated playback (avoid race condition)
-      if (isPlaybackPendingRef.current) {
-        return
-      }
-
-      try {
-        const response = await fetch('/api/spotify/status')
-        if (response.ok) {
-          const data = await response.json()
-          setIsPlaying(data.isPlaying || false)
-          if (data.track) {
-            setCurrentTrack({
-              id: data.track.id,
-              title: data.track.title,
-              artist: data.track.artist,
-              duration: formatDuration(data.track.duration),
-              image: data.track.image,
-            })
-            if (data.track.duration > 0) {
-              setPlaybackProgress(
-                (data.track.progress / data.track.duration) * 100
-              )
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching status:', error)
-      }
-    }, 2000)
-
-    return () => clearInterval(interval)
-  }
-
   const formatDuration = (ms: number) => {
     const seconds = Math.floor(ms / 1000)
     const minutes = Math.floor(seconds / 60)
@@ -155,6 +165,18 @@ export default function MusicPlayer() {
   }
 
   const handlePlay = async () => {
+    // If player not ready, show message
+    if (!isPlayerReady || !deviceId) {
+      console.log('Player not ready yet...')
+      return
+    }
+
+    // If currently playing, just toggle pause
+    if (isPlaying) {
+      await playerTogglePlay()
+      return
+    }
+
     // If no playlist selected, go to playlists
     if (!selectedPlaylist) {
       if (playlists.length > 0) {
@@ -177,90 +199,44 @@ export default function MusicPlayer() {
       if (tracks.length === 0) return
     }
 
+    // Play using Web Playback SDK
     try {
-      const response = await fetch('/api/spotify/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: isPlaying ? 'pause' : 'play',
-          context_uri: isPlaying ? undefined : selectedPlaylist.uri,
-        }),
-      })
-
-      if (response.ok) {
-        // Optimistically update state
-        const newPlayingState = !isPlaying
-        setIsPlaying(newPlayingState)
-        
-        // If starting playback, set pending flag to prevent status poll from immediately overriding
-        if (newPlayingState) {
-          isPlaybackPendingRef.current = true
-          // Clear pending flag after a delay to allow Spotify to start
-          setTimeout(() => {
-            isPlaybackPendingRef.current = false
-          }, 3000)
-        }
-        
-        // If starting playback and we have tracks but no current track, set first track
-        if (newPlayingState && selectedPlaylist.tracks.length > 0 && !currentTrack) {
-          setCurrentTrack(selectedPlaylist.tracks[0])
-        }
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Playback error:', errorData)
-        alert(`Failed to ${isPlaying ? 'pause' : 'play'}. Make sure Spotify is open on a device.`)
-        // Don't update state on error
+      await playerPlay(selectedPlaylist.uri)
+      setIsPlaying(true)
+      if (selectedPlaylist.tracks.length > 0 && !currentTrack) {
+        setCurrentTrack(selectedPlaylist.tracks[0])
       }
     } catch (error) {
-      console.error('Error toggling playback:', error)
+      console.error('Error playing:', error)
     }
   }
 
   const handleNext = async () => {
+    if (!isPlayerReady) return
     try {
-      await fetch('/api/spotify/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'next' }),
-      })
+      await playerNextTrack()
     } catch (error) {
       console.error('Error skipping:', error)
     }
   }
 
   const handlePrevious = async () => {
+    if (!isPlayerReady) return
     try {
-      await fetch('/api/spotify/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'previous' }),
-      })
+      await playerPreviousTrack()
     } catch (error) {
       console.error('Error going back:', error)
     }
   }
 
   const handleTrackSelect = async (track: Track, index: number) => {
-    if (!selectedPlaylist) return
+    if (!selectedPlaylist || !isPlayerReady || !deviceId) return
     try {
-      const response = await fetch('/api/spotify/play', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'play',
-          context_uri: selectedPlaylist.uri,
-          offset: index,
-        }),
-      })
-
-      if (response.ok) {
-        setCurrentTrack(track)
-        setIsPlaying(true)
-        setScreenMode('now_playing')
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Error playing track:', errorData)
-      }
+      // Use the Web Playback SDK to play from context with offset (track index)
+      await playerPlay(selectedPlaylist.uri, index)
+      setCurrentTrack(track)
+      setIsPlaying(true)
+      setScreenMode('now_playing')
     } catch (error) {
       console.error('Error playing track:', error)
     }
@@ -467,8 +443,31 @@ export default function MusicPlayer() {
         </motion.div>
       </div>
 
-      <div className="border-t-2 border-gray-800 bg-gray-900 p-4 text-center text-sm text-gray-400">
-        <p>Menu → playlists • Select playlist → tracks • Center = play / pause</p>
+      <div className="border-t-2 border-gray-800 bg-gray-900 p-4 text-sm text-gray-400">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex-1 text-center">
+            {!isPlayerReady && accessToken ? (
+              <p className="text-yellow-400 animate-pulse">🎵 Initializing MEOS Player...</p>
+            ) : isPlayerReady ? (
+              <p>🎵 MEOS Player Ready • Menu → playlists • Select → tracks</p>
+            ) : (
+              <p>Menu → playlists • Select playlist → tracks • Center = play / pause</p>
+            )}
+          </div>
+          {isPlayerReady && (
+            <button
+              onClick={async () => {
+                const currentVol = await playerGetVolume?.()
+                console.log('Current volume:', currentVol)
+                await playerSetVolume?.(1.0)
+                alert('Volume set to 100%! Check browser console for details.')
+              }}
+              className="ml-4 px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-xs whitespace-nowrap"
+            >
+              🔊 Check Volume
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
