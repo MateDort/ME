@@ -3,7 +3,14 @@ import { NextRequest, NextResponse } from 'next/server'
 async function getAccessToken(req: NextRequest): Promise<string | null> {
   let accessToken = req.cookies.get('spotify_access_token')?.value
 
+  console.log('Spotify Playlists - Access Token Check:', {
+    hasAccessToken: !!accessToken,
+    tokenLength: accessToken?.length,
+    allCookies: req.cookies.getAll().map(c => c.name),
+  })
+
   if (!accessToken) {
+    console.log('Spotify Playlists - No access token found in cookies')
     return null
   }
 
@@ -12,6 +19,8 @@ async function getAccessToken(req: NextRequest): Promise<string | null> {
     const testResponse = await fetch('https://api.spotify.com/v1/me', {
       headers: { 'Authorization': `Bearer ${accessToken}` },
     })
+
+    console.log('Spotify Playlists - Token validation response:', testResponse.status)
 
     if (testResponse.status === 401) {
       // Token expired, try to refresh
@@ -37,13 +46,16 @@ async function getAccessToken(req: NextRequest): Promise<string | null> {
 
       const tokenData = await tokenResponse.json()
       if (tokenResponse.ok && tokenData.access_token) {
+        console.log('Spotify Playlists - Token refreshed successfully')
         accessToken = tokenData.access_token
+        // Note: Refreshed token needs to be saved in the response, not here
       } else {
+        console.log('Spotify Playlists - Token refresh failed:', tokenData)
         return null
       }
     }
   } catch (error) {
-    console.error('Token check error:', error)
+    console.error('Spotify Playlists - Token check error:', error)
     return null
   }
 

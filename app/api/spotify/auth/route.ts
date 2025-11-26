@@ -50,9 +50,10 @@ export async function GET(req: NextRequest) {
     sameSite: 'lax',
     path: '/',
     maxAge: 600, // 10 minutes
+    domain: undefined, // Let browser set domain automatically
   })
   
-  console.log('Spotify Auth - State stored:', state)
+  console.log('Spotify Auth - State stored:', state, '(cookie will be set for', req.nextUrl.hostname, ')')
 
   return response
 }

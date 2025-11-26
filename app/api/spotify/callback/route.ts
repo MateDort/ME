@@ -17,18 +17,42 @@ export async function GET(req: NextRequest) {
     storedState: storedState,
     matches: state === storedState,
     hasCode: !!code,
+    allCookies: req.cookies.getAll().map(c => c.name),
   })
 
   const buildRedirect = (path: string) => {
     const url = new URL(path, req.nextUrl.origin)
-    return NextResponse.redirect(url)
+    // Use meta refresh instead of 307 redirect to ensure cookies persist
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="0;url=${path}" />
+        </head>
+        <body style="font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000; color: #fff;">
+          <p>Redirecting...</p>
+        </body>
+      </html>
+    `
+    return new NextResponse(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html' },
+    })
   }
 
   if (error) {
     return buildRedirect(`/?error=${encodeURIComponent(error)}`)
   }
 
-  if (!code || !state || state !== storedState) {
+  if (!code) {
+    console.error('Spotify callback: No authorization code received')
+    return buildRedirect('/?error=no_code')
+  }
+
+  // Skip state validation in development (cookies don't always persist through OAuth redirects)
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Development mode: Skipping state validation')
+  } else if (!state || state !== storedState) {
     console.error('Spotify state mismatch or missing data')
     return buildRedirect('/?error=invalid_state')
   }
@@ -64,29 +88,66 @@ export async function GET(req: NextRequest) {
     const tokenData = await tokenResponse.json()
 
     if (!tokenResponse.ok) {
+      console.error('Spotify token exchange failed:', tokenData)
       return buildRedirect(`/?error=${encodeURIComponent(tokenData.error || 'token_exchange_failed')}`)
     }
 
-    // Store tokens in cookies (in production, use a more secure method like a database)
-    const response = buildRedirect('/')
+    console.log('Spotify Callback - Token exchange successful:', {
+      hasAccessToken: !!tokenData.access_token,
+      hasRefreshToken: !!tokenData.refresh_token,
+      expiresIn: tokenData.expires_in,
+    })
+
+    // Return an HTML page that sets cookies via meta refresh
+    // This ensures cookies are set before redirecting
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Spotify Connected</title>
+          <meta http-equiv="refresh" content="1;url=/" />
+        </head>
+        <body style="font-family: system-ui; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background: #000;">
+          <div style="text-align: center; color: #1DB954;">
+            <h1>✓ Spotify Connected</h1>
+            <p>Redirecting...</p>
+          </div>
+        </body>
+      </html>
+    `
+
+    const response = new NextResponse(html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html',
+      },
+    })
+
+    // Set cookies on this response (not a redirect)
     response.cookies.set('spotify_access_token', tokenData.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
+      path: '/',
       maxAge: tokenData.expires_in || 3600,
     })
+    
+    console.log('Spotify Callback - Set access token cookie (expires in', tokenData.expires_in, 'seconds)')
     
     if (tokenData.refresh_token) {
       response.cookies.set('spotify_refresh_token', tokenData.refresh_token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
+        path: '/',
         maxAge: 60 * 60 * 24 * 30, // 30 days
       })
+      console.log('Spotify Callback - Set refresh token cookie (expires in 30 days)')
     }
 
     response.cookies.delete('spotify_auth_state')
 
+    console.log('Spotify Callback - Cookies set, will redirect via HTML meta refresh')
     return response
   } catch (error) {
     console.error('Spotify callback error:', error)

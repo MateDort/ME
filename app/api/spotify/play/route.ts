@@ -50,14 +50,18 @@ async function getAccessToken(req: NextRequest): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
+  console.log('Spotify Play - POST request received')
+  
   const accessToken = await getAccessToken(req)
 
   if (!accessToken) {
+    console.log('Spotify Play - No access token')
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   try {
     const body = await req.json()
+    console.log('Spotify Play - Action:', body.action)
     const {
       action,
       context_uri,
@@ -120,12 +124,14 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok && response.status !== 204) {
       const errorData = await response.json().catch(() => ({}))
+      console.log('Spotify Play - Playback API error:', response.status, errorData)
       return NextResponse.json({ error: errorData.error?.message || 'Playback failed' }, { status: response.status })
     }
 
+    console.log('Spotify Play - Success')
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Playback error:', error)
+    console.error('Spotify Play - Playback error:', error)
     return NextResponse.json({ error: 'playback_error' }, { status: 500 })
   }
 }
