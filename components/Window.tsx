@@ -23,14 +23,24 @@ export default function Window({ window, children }: WindowProps) {
     height: 0 
   })
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('button, input, textarea, select')) return
+  const handlePointerDown = (e: React.PointerEvent) => {
+    setActiveWindow(window.id)
+
+    if ((e.target as HTMLElement).closest('button, input, textarea, select, a')) return
+
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+
+    if (e.pointerType === 'touch') {
+      const isTitleBar = (e.target as HTMLElement).closest('[data-window-title-bar="true"]')
+      if (!isTitleBar) return
+      e.preventDefault()
+    }
+
     setIsDragging(true)
     setDragOffset({
       x: e.clientX - window.x,
       y: e.clientY - window.y,
     })
-    setActiveWindow(window.id)
   }
 
   const handleTitleBarDoubleClick = () => {
@@ -40,7 +50,7 @@ export default function Window({ window, children }: WindowProps) {
   useEffect(() => {
     if (!isDragging && !isResizing) return
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handlePointerMove = (e: PointerEvent) => {
       if (isDragging) {
         updateWindow(window.id, {
           x: e.clientX - dragOffset.x,
@@ -96,22 +106,27 @@ export default function Window({ window, children }: WindowProps) {
       }
     }
 
-    const handleMouseUp = () => {
+    const handlePointerUp = () => {
       setIsDragging(false)
       setIsResizing(null)
     }
 
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    document.addEventListener('pointermove', handlePointerMove)
+    document.addEventListener('pointerup', handlePointerUp)
+    document.addEventListener('pointercancel', handlePointerUp)
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      document.removeEventListener('pointermove', handlePointerMove)
+      document.removeEventListener('pointerup', handlePointerUp)
+      document.removeEventListener('pointercancel', handlePointerUp)
     }
   }, [isDragging, isResizing, dragOffset.x, dragOffset.y, resizeStart, window.id, window.x, window.y, updateWindow])
 
-  const handleResizeStart = (e: React.MouseEvent, edge: string) => {
+  const handleResizeStart = (e: React.PointerEvent, edge: string) => {
     e.stopPropagation()
+    if (e.pointerType === 'touch') {
+      e.preventDefault()
+    }
     setIsResizing(edge)
     setResizeStart({
       mouseX: e.clientX,
@@ -142,7 +157,7 @@ export default function Window({ window, children }: WindowProps) {
       initial={{ opacity: 0, scale: 0.95, y: -20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
       onClick={() => setActiveWindow(window.id)}
     >
       {/* Classic Aqua Title Bar with brushed metal */}
@@ -160,8 +175,10 @@ export default function Window({ window, children }: WindowProps) {
           `,
           borderBottom: '1px solid rgba(0,0,0,0.2)',
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)',
+          touchAction: 'none',
         }}
         onDoubleClick={handleTitleBarDoubleClick}
+        data-window-title-bar="true"
       >
         {/* Classic Aqua traffic lights */}
         <div className="flex gap-2 mr-4">
@@ -246,14 +263,46 @@ export default function Window({ window, children }: WindowProps) {
       {/* Resize Handles */}
       {!window.maximized && (
         <>
-          <div className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'top')} />
-          <div className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
-          <div className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'left')} />
-          <div className="absolute top-0 bottom-0 right-0 w-2 cursor-ew-resize z-10" onMouseDown={(e) => handleResizeStart(e, 'right')} />
-          <div className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
-          <div className="absolute top-0 right-0 w-4 h-4 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
-          <div className="absolute bottom-0 left-0 w-4 h-4 cursor-nesw-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-          <div className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+          <div
+            className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize z-10"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'top')}
+          />
+          <div
+            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize z-10"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'bottom')}
+          />
+          <div
+            className="absolute top-0 bottom-0 left-0 w-2 cursor-ew-resize z-10"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'left')}
+          />
+          <div
+            className="absolute top-0 bottom-0 right-0 w-2 cursor-ew-resize z-10"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'right')}
+          />
+          <div
+            className="absolute top-0 left-0 w-4 h-4 cursor-nwse-resize z-20"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'top-left')}
+          />
+          <div
+            className="absolute top-0 right-0 w-4 h-4 cursor-nesw-resize z-20"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'top-right')}
+          />
+          <div
+            className="absolute bottom-0 left-0 w-4 h-4 cursor-nesw-resize z-20"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'bottom-left')}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize z-20"
+            style={{ touchAction: 'none' }}
+            onPointerDown={(e) => handleResizeStart(e, 'bottom-right')}
+          />
         </>
       )}
     </motion.div>
