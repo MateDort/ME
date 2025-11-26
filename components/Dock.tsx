@@ -3,17 +3,20 @@
 import { useOSStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 
-const apps = [
-  { id: 'launcher', title: 'Launchpad', icon: '🚀', component: 'launcher' },
-  { id: 'messages', title: 'Messages', icon: '💬', component: 'messages' },
-  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', component: 'brainstorm' },
-  { id: 'search', title: 'Safari', icon: '🔍', component: 'search' },
-  { id: 'music', title: 'iTunes', icon: '🎵', component: 'music' },
-  { id: 'finder', title: 'Finder', icon: '📁', component: 'finder' },
+const allDockApps = [
+  { id: 'launcher', title: 'Launchpad', icon: '🚀', component: 'launcher', requiresAuth: false },
+  { id: 'messages', title: 'Messages', icon: '💬', component: 'messages', requiresAuth: false },
+  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', component: 'brainstorm', requiresAuth: false },
+  { id: 'search', title: 'Safari', icon: '🔍', component: 'search', requiresAuth: false },
+  { id: 'music', title: 'iTunes', icon: '🎵', component: 'music', requiresAuth: true },
+  { id: 'finder', title: 'Finder', icon: '📁', component: 'finder', requiresAuth: false },
 ]
 
 export default function Dock() {
-  const { windows, addWindow } = useOSStore()
+  const { windows, addWindow, isAuthenticated } = useOSStore()
+  
+  // Filter apps based on authentication status
+  const apps = allDockApps.filter(app => !app.requiresAuth || isAuthenticated)
 
   const handleAppClick = (app: typeof apps[0]) => {
     const existingWindow = windows.find((w) => w.component === app.component)

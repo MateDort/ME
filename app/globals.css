@@ -90,3 +90,20 @@ strong {
       rgba(255,255,255,0.3) 100%);
   background-size: 3px 100%;
 }
+
+.notion-block-input {
+  min-height: 28px;
+  white-space: pre-wrap;
+}
+
+.notion-block-input:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(55, 53, 47, 0.35);
+  pointer-events: none;
+}
+
+.notion-page-title:empty:before {
+  content: attr(data-placeholder);
+  color: rgba(55, 53, 47, 0.3);
+  pointer-events: none;
+}

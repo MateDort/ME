@@ -107,7 +107,7 @@ export default function MessagesApp() {
       news: { title: 'News', component: 'news' },
       health: { title: 'Health', component: 'health' },
       finder: { title: 'Finder', component: 'finder' },
-      notebook: { title: 'Notebook', component: 'notebook' },
+      notion: { title: 'Notion', component: 'notion' },
       launcher: { title: 'Launchpad', component: 'launcher' },
       skillshipping: { title: 'SkillShipping', component: 'skillshipping' },
       neuranote: { title: 'NeuraNote', component: 'neuranote' },

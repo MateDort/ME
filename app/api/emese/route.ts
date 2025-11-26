@@ -187,7 +187,7 @@ function parseActionsFromText(text: string): Action[] {
     'open brainstorm': { type: 'open_app', app: 'brainstorm' },
     'open messages': { type: 'open_app', app: 'messages' },
     'open finder': { type: 'open_app', app: 'finder' },
-    'open notebook': { type: 'open_app', app: 'notebook' },
+    'open notion': { type: 'open_app', app: 'notion' },
   }
 
   for (const [pattern, action] of Object.entries(appPatterns)) {

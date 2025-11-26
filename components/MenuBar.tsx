@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useOSStore } from '@/lib/store'
+import LoginModal from './LoginModal'
 
 interface MenuBarProps {
   timeIcon?: string
@@ -11,7 +12,8 @@ interface MenuBarProps {
 export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState('')
-  const { addWindow } = useOSStore()
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const { addWindow, isAuthenticated, login, logout } = useOSStore()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -46,6 +48,24 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     }
   }, [activeMenu])
 
+  const handleLogin = (success: boolean) => {
+    if (success) {
+      login()
+    }
+  }
+
+  const handleLogout = () => {
+    logout()
+  }
+
+  const handleAuthAction = () => {
+    if (isAuthenticated) {
+      handleLogout()
+    } else {
+      setShowLoginModal(true)
+    }
+  }
+
   const menuItems = {
     apple: [
       { label: 'About This Mac', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
@@ -60,7 +80,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
       { label: 'Restart...', action: () => {} },
       { label: 'Shut Down...', action: () => {} },
       { label: '---' },
-      { label: 'Log Out...', action: () => {} },
+      { label: isAuthenticated ? 'Log Out...' : 'Log In...', action: handleAuthAction },
     ],
     finder: [
       { label: 'About Finder', action: () => {} },
@@ -160,20 +180,27 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   }
 
   return (
-    <div 
-      ref={menuRef} 
-      className="fixed top-0 left-0 right-0 h-6 z-50 flex items-center text-white font-bold"
-      style={{ 
-        background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(200,200,255,0.3) 50%, rgba(150,150,220,0.4) 100%)',
-        backdropFilter: 'blur(10px)',
-        WebkitBackdropFilter: 'blur(10px)',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
-        borderBottom: '1px solid rgba(255,255,255,0.3)',
-        fontFamily: '"Lucida Grande", sans-serif',
-        fontSize: '13px',
-        textShadow: '0 1px 0 rgba(255,255,255,0.5)',
-      }}
-    >
+    <>
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)}
+        onLogin={handleLogin}
+      />
+      
+      <div 
+        ref={menuRef} 
+        className="fixed top-0 left-0 right-0 h-6 z-50 flex items-center text-white font-bold"
+        style={{ 
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(200,200,255,0.3) 50%, rgba(150,150,220,0.4) 100%)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5)',
+          borderBottom: '1px solid rgba(255,255,255,0.3)',
+          fontFamily: '"Lucida Grande", sans-serif',
+          fontSize: '13px',
+          textShadow: '0 1px 0 rgba(255,255,255,0.5)',
+        }}
+      >
       {/* Apple Logo */}
       <button
         onClick={() => handleMenuClick('apple')}
@@ -304,6 +331,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+      </div>
+    </>
   )
 }

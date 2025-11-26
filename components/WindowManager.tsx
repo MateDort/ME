@@ -17,6 +17,7 @@ import SkillShippingApp from './apps/SkillShippingApp'
 import NeuraNoteApp from './apps/NeuraNoteApp'
 import AIDoormanApp from './apps/AIDoormanApp'
 import FinderApp from './apps/FinderApp'
+import NotionApp from './apps/NotionApp'
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   messages: MessagesApp,
@@ -34,17 +35,28 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   neuranote: NeuraNoteApp,
   doorman: AIDoormanApp,
   finder: FinderApp,
+  notion: NotionApp,
   blank: () => <div className="w-full h-full flex items-center justify-center text-gray-500">Empty Window</div>,
 }
 
+// Apps that require authentication
+const restrictedApps = ['music', 'health', 'notion']
+
 export default function WindowManager() {
-  const { windows } = useOSStore()
+  const { windows, isAuthenticated, closeWindow } = useOSStore()
 
   return (
     <>
       {windows.map((window) => {
         const Component = componentMap[window.component]
         if (!Component) return null
+
+        // Check if app requires authentication
+        if (restrictedApps.includes(window.component) && !isAuthenticated) {
+          // Close the window if user tries to access restricted app without auth
+          setTimeout(() => closeWindow(window.id), 0)
+          return null
+        }
 
         return (
           <Window key={window.id} window={window}>

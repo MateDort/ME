@@ -4,7 +4,6 @@ import { callLLMWithFallback } from '@/lib/llm-client'
 
 export async function POST(req: NextRequest) {
   try {
-    const claude = getClaudeClient()
     const { thought } = await req.json()
 
     const prompt = `${MATE_PROFILE}

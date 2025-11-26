@@ -37,6 +37,8 @@ interface OSState {
   // Chat state for M+M and Messages sync
   emeseMessages: ChatMessage[]
   meMessages: ChatMessage[]
+  // Authentication state
+  isAuthenticated: boolean
   addWindow: (window: Omit<Window, 'zIndex'>) => void
   closeWindow: (id: string) => void
   setActiveWindow: (id: string) => void
@@ -48,6 +50,9 @@ interface OSState {
   addMeMessage: (message: ChatMessage) => void
   clearEmeseMessages: () => void
   clearMeMessages: () => void
+  // Auth functions
+  login: () => void
+  logout: () => void
 }
 
 let zIndexCounter = 1000
@@ -60,6 +65,7 @@ export const useOSStore = create<OSState>()(
       notifications: [],
       emeseMessages: [],
       meMessages: [],
+      isAuthenticated: false,
       addWindow: (window) => {
         const zIndex = zIndexCounter++
         set((state) => ({
@@ -116,12 +122,21 @@ export const useOSStore = create<OSState>()(
         set(() => ({
           meMessages: [],
         })),
+      login: () =>
+        set(() => ({
+          isAuthenticated: true,
+        })),
+      logout: () =>
+        set(() => ({
+          isAuthenticated: false,
+        })),
     }),
     {
       name: 'meos-storage',
       partialize: (state) => ({
         emeseMessages: state.emeseMessages,
         meMessages: state.meMessages,
+        isAuthenticated: state.isAuthenticated,
       }),
     }
   )

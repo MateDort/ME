@@ -4,24 +4,28 @@ import { useOSStore } from '@/lib/store'
 import { motion } from 'framer-motion'
 
 const allApps = [
-  { id: 'messages', title: 'Messages', icon: '💬', description: 'Chat with Emese AI', component: 'messages' },
-  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm' },
-  { id: 'finder', title: 'Finder', icon: '📁', description: 'File manager', component: 'finder' },
-  { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar' },
-  { id: 'maps', title: 'Maps', icon: '🗺️', description: 'Navigation & places', component: 'maps' },
-  { id: 'music', title: 'iTunes', icon: '🎵', description: 'Music player', component: 'music' },
-  { id: 'search', title: 'Safari', icon: '🔍', description: 'Web browser', component: 'search' },
-  { id: 'news', title: 'News', icon: '📰', description: 'Personalized news', component: 'news' },
-  { id: 'health', title: 'Health', icon: '🏃', description: 'Health insights', component: 'health' },
-  { id: 'language', title: 'Language', icon: '🌍', description: 'Learn languages', component: 'language' },
-  { id: 'piano', title: 'GarageBand', icon: '🎹', description: 'Play piano', component: 'piano' },
-  { id: 'skillshipping', title: 'SkillShipping', icon: '📦', description: 'Track skills', component: 'skillshipping' },
-  { id: 'neuranote', title: 'NeuraNote', icon: '🧠', description: 'AI notes', component: 'neuranote' },
-  { id: 'doorman', title: 'AI Doorman', icon: '🚪', description: 'Smart security', component: 'doorman' },
+  { id: 'messages', title: 'Messages', icon: '💬', description: 'Chat with Emese AI', component: 'messages', requiresAuth: false },
+  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm', requiresAuth: false },
+  { id: 'finder', title: 'Finder', icon: '📁', description: 'File manager', component: 'finder', requiresAuth: false },
+  { id: 'notion', title: 'Notion', icon: '🧱', description: 'Docs & blocks workspace', component: 'notion', requiresAuth: true },
+  { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar', requiresAuth: false },
+  { id: 'maps', title: 'Maps', icon: '🗺️', description: 'Navigation & places', component: 'maps', requiresAuth: false },
+  { id: 'music', title: 'iTunes', icon: '🎵', description: 'Music player', component: 'music', requiresAuth: true },
+  { id: 'search', title: 'Safari', icon: '🔍', description: 'Web browser', component: 'search', requiresAuth: false },
+  { id: 'news', title: 'News', icon: '📰', description: 'Personalized news', component: 'news', requiresAuth: false },
+  { id: 'health', title: 'Health', icon: '🏃', description: 'Health insights', component: 'health', requiresAuth: true },
+  { id: 'language', title: 'Language', icon: '🌍', description: 'Learn languages', component: 'language', requiresAuth: false },
+  { id: 'piano', title: 'GarageBand', icon: '🎹', description: 'Play piano', component: 'piano', requiresAuth: false },
+  { id: 'skillshipping', title: 'SkillShipping', icon: '📦', description: 'Track skills', component: 'skillshipping', requiresAuth: false },
+  { id: 'neuranote', title: 'NeuraNote', icon: '🧠', description: 'AI notes', component: 'neuranote', requiresAuth: false },
+  { id: 'doorman', title: 'AI Doorman', icon: '🚪', description: 'Smart security', component: 'doorman', requiresAuth: false },
 ]
 
 export default function AppLauncher() {
-  const { windows, addWindow } = useOSStore()
+  const { windows, addWindow, isAuthenticated } = useOSStore()
+  
+  // Filter apps based on authentication status
+  const availableApps = allApps.filter(app => !app.requiresAuth || isAuthenticated)
 
   const handleAppClick = (app: typeof allApps[0]) => {
     const existingWindow = windows.find((w) => w.component === app.component)
@@ -99,7 +103,7 @@ export default function AppLauncher() {
 
         {/* App Grid - Classic Mac OS X style */}
         <div className="grid grid-cols-4 md:grid-cols-5 gap-6">
-          {allApps.map((app, index) => (
+          {availableApps.map((app, index) => (
             <motion.button
               key={app.id}
               onClick={() => handleAppClick(app)}

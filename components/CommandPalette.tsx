@@ -139,7 +139,7 @@ export default function CommandPalette() {
       news: { title: 'News', component: 'news' },
       health: { title: 'Health', component: 'health' },
       finder: { title: 'Finder', component: 'finder' },
-      notebook: { title: 'Notebook', component: 'notebook' },
+      notion: { title: 'Notion', component: 'notion' },
       launcher: { title: 'Launchpad', component: 'launcher' },
     }
 
