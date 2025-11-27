@@ -20,12 +20,12 @@ Early Google search interface with:
 - Daily personalized news feed (F1, startups, AI, technology, inventing)
 - No politics or death news unless major
 
-### 💡 Brainstorm App
-Hybrid of Apple Notes and Cursor:
-- Create notes and code snippets
-- Syntax highlighting for multiple languages
-- Code preview
-- Perfect for brainstorming and building projects
+### 🖥️ Cursor App
+Agentic retro IDE inspired by early-2000s Macs and modern Cursor:
+- Create multi-file projects with natural language
+- Live preview for web targets plus raw file tree for everything else
+- Built-in chat + plan visualization for edits
+- Designed for brainstorming and shipping projects fast
 
 ### 🔔 Notification System
 macOS-style notifications with random thoughts from the ME agent (Máté's AI persona).
@@ -123,8 +123,8 @@ iPod-style player with click wheel controls.
 ### Google Search
 Search the web with AI-powered responses. By default, shows a personalized daily news feed.
 
-### Brainstorm
-Create notes and code snippets. Supports multiple programming languages with syntax highlighting.
+### Cursor
+Agentic coding workspace with chat-driven planning, multi-file editing, and retro-themed live previews.
 
 ## AI Agents
 

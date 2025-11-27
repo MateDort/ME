@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 const allDockApps = [
   { id: 'launcher', title: 'Launchpad', icon: '🚀', component: 'launcher', requiresAuth: false },
   { id: 'messages', title: 'Messages', icon: '💬', component: 'messages', requiresAuth: false },
-  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', component: 'brainstorm', requiresAuth: false },
+  { id: 'cursor', title: 'Cursor', icon: '🖥️', component: 'cursor', requiresAuth: false },
   { id: 'search', title: 'Safari', icon: '🔍', component: 'search', requiresAuth: false },
   { id: 'music', title: 'iTunes', icon: '🎵', component: 'music', requiresAuth: true },
   { id: 'finder', title: 'Finder', icon: '📁', component: 'finder', requiresAuth: false },

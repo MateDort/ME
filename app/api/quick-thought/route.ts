@@ -27,14 +27,14 @@ Also, I determine if any actions should be taken based on my thought. Return my 
     // or {"type": "video", "data": {}} // if I want to watch something
     // or {"type": "search", "data": {"query": "..."}} // if I want to search
     // or {"type": "message", "data": {}} // if I want to chat
-    // or {"type": "note", "data": {}} // if I want to brainstorm
+    // or {"type": "note", "data": {}} // if I want to jump into Cursor
   ]
 }
 
 Examples:
 - "I want to listen to music" → action: music
 - "Show me F1 news" → action: search with query "F1 news"
-- "I have an idea" → action: note (brainstorm)
+- "I have an idea" → action: note (Cursor)
 - "I'm feeling creative" → action: note
 - "What's happening in tech?" → action: search with query "tech news"
 

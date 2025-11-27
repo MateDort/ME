@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 
 const allApps = [
   { id: 'messages', title: 'Messages', icon: '💬', description: 'Chat with Emese AI', component: 'messages', requiresAuth: false },
-  { id: 'brainstorm', title: 'Brainstorm', icon: '💡', description: 'Code generation & projects', component: 'brainstorm', requiresAuth: false },
+  { id: 'cursor', title: 'Cursor', icon: '🖥️', description: 'Agentic coding workspace', component: 'cursor', requiresAuth: false },
   { id: 'finder', title: 'Finder', icon: '📁', description: 'File manager', component: 'finder', requiresAuth: false },
   { id: 'notion', title: 'Notion', icon: '🧱', description: 'Docs & blocks workspace', component: 'notion', requiresAuth: true },
   { id: 'calendar', title: 'Calendar', icon: '📅', description: 'Schedule & events', component: 'calendar', requiresAuth: true },

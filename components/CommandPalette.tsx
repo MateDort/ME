@@ -133,7 +133,8 @@ export default function CommandPalette() {
       music: { title: 'iTunes', component: 'music' },
       search: { title: 'Safari', component: 'search' },
       messages: { title: 'Messages', component: 'messages' },
-      brainstorm: { title: 'Brainstorm', component: 'brainstorm' },
+      cursor: { title: 'Cursor', component: 'cursor' },
+      brainstorm: { title: 'Cursor', component: 'cursor' },
       calendar: { title: 'Calendar', component: 'calendar' },
       maps: { title: 'Maps', component: 'maps' },
       news: { title: 'News', component: 'news' },
@@ -212,7 +213,7 @@ export default function CommandPalette() {
           video: 'search',
           search: 'search',
           message: 'messages',
-          note: 'brainstorm',
+          note: 'cursor',
         }
         const legacyApp = legacyMap[action.type]
         if (legacyApp && appMap[legacyApp]) {

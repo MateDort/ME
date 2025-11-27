@@ -3,10 +3,23 @@ import { MATE_PROFILE } from '@/lib/mate-profile'
 import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { CLAUDE_MODELS, GEMINI_MODELS } from '@/lib/models'
+import { describeLanguageProfile, mergeLanguageProfile, DEFAULT_LANGUAGE_PROFILE } from '@/lib/language'
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, model, mode, image, existingFiles, projectDescription, filePath, fileType, todo } = await req.json()
+    const {
+      prompt,
+      model,
+      mode,
+      image,
+      existingFiles,
+      projectDescription,
+      filePath,
+      fileType,
+      todo,
+      languageProfile,
+      apiKeys,
+    } = await req.json()
 
     if (!model) {
       return NextResponse.json({ error: 'Model is required' }, { status: 400 })
@@ -26,9 +39,11 @@ export async function POST(req: NextRequest) {
 
     const taskContext = todo ? `\n\nCurrent task: ${todo.task}` : ''
     const fileContext = filePath ? `\n\nGenerating file: ${filePath} (${fileType})` : ''
+    const mergedProfile = mergeLanguageProfile(DEFAULT_LANGUAGE_PROFILE, languageProfile)
+    const languageContext = describeLanguageProfile(mergedProfile)
 
     if (isClaude) {
-      const claude = getClaudeClient()
+      const claude = getClaudeClient(apiKeys?.claude?.apiKey)
       
       let systemPrompt = ''
       if (mode === 'agent') {
@@ -36,6 +51,8 @@ export async function POST(req: NextRequest) {
 
 I am building: ${projectDescription || 'a project'}
 ${taskContext}${fileContext}
+Project target:
+${languageContext}
 
 I generate complete, working code.
 - For HTML files, include all necessary CSS and JavaScript inline if it's a single-file project
@@ -45,6 +62,9 @@ I generate complete, working code.
 - Return ONLY the code, no markdown, no explanations${context}`
       } else {
         systemPrompt = `${MATE_PROFILE}
+
+Project target:
+${languageContext}
 
 I answer questions about code and projects. I provide helpful explanations and guidance.${context}`
       }
@@ -98,7 +118,7 @@ I answer questions about code and projects. I provide helpful explanations and g
         model: model,
       })
     } else if (isGemini) {
-      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+      const apiKey = apiKeys?.gemini?.apiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY
       if (!apiKey) {
         return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 })
       }
@@ -112,6 +132,8 @@ I answer questions about code and projects. I provide helpful explanations and g
 
 I am building: ${projectDescription || 'a project'}
 ${taskContext}${fileContext}
+Project target:
+${languageContext}
 
 I generate complete, working code.
 - For HTML files, include all necessary CSS and JavaScript inline if it's a single-file project
@@ -123,6 +145,9 @@ I generate complete, working code.
 User request: ${prompt}`
       } else {
         fullPrompt = `You are a helpful coding assistant.
+
+Project target:
+${languageContext}
 
 I answer questions about code and projects. I provide helpful explanations and guidance.${context}
 

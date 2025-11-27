@@ -13,7 +13,7 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [currentTime, setCurrentTime] = useState('')
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const { addWindow, isAuthenticated, login, logout } = useOSStore()
+  const { addWindow, isAuthenticated, login, logout, windows, setActiveWindow } = useOSStore()
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -66,11 +66,30 @@ export default function MenuBar({ timeIcon = '☀️' }: MenuBarProps) {
     }
   }
 
+  const openPreferences = () => {
+    const existing = windows.find((w) => w.component === 'preferences')
+    if (existing) {
+      setActiveWindow(existing.id)
+      return
+    }
+    addWindow({
+      id: `preferences-${Date.now()}`,
+      title: 'System Preferences',
+      component: 'preferences',
+      x: 140,
+      y: 80,
+      width: 780,
+      height: 600,
+      minimized: false,
+      maximized: false,
+    })
+  }
+
   const menuItems = {
     apple: [
       { label: 'About This Mac', action: () => alert('MEOS - My Operating System\nVersion 1.0\nBuilt with Next.js, React, and AI') },
       { label: '---' },
-      { label: 'System Preferences...', action: () => {} },
+      { label: 'System Preferences...', action: openPreferences },
       { label: 'Dock', action: () => {} },
       { label: '---' },
       { label: 'Recent Items', action: () => {} },

@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 
-export function getClaudeClient() {
-  const apiKey = process.env.NEXT_PUBLIC_CLAUDE_API_KEY || process.env.CLAUDE_API_KEY || ''
+export function getClaudeClient(apiKeyOverride?: string) {
+  const apiKey =
+    apiKeyOverride || process.env.NEXT_PUBLIC_CLAUDE_API_KEY || process.env.CLAUDE_API_KEY || ''
   
   if (!apiKey) {
     throw new Error('Claude API key not configured. Please set NEXT_PUBLIC_CLAUDE_API_KEY or CLAUDE_API_KEY in .env.local')

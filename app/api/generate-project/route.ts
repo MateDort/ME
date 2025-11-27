@@ -2,14 +2,31 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { isClaudeModel, isGeminiModel, FALLBACK_MODEL } from '@/lib/models'
+import { detectLanguageProfile, describeLanguageProfile, mergeLanguageProfile, LanguageProfile } from '@/lib/language'
 
-const PROJECT_PROMPT = (description: string) => `You are a code generation assistant. Create a project plan for: "${description}"
+const PROJECT_PROMPT = (description: string, profile: LanguageProfile) => `You are a senior software architect. Create a project plan for: "${description}"
 
 Return ONLY valid JSON in this exact format (no markdown, no explanation):
 {
   "name": "project-name",
   "type": "web" | "game" | "app" | "script" | "api",
   "language": "html" | "javascript" | "python" | "typescript" | "css" | etc,
+  "runtime": "Node.js" | "Browser" | "Python" | "Go" | "Rust" | etc,
+  "framework": "Next.js" | "FastAPI" | "Express" | "Axum" | etc,
+  "languageProfile": {
+    "language": "...",
+    "framework": "...",
+    "runtime": "...",
+    "packageManager": "...",
+    "buildCommand": "...",
+    "startCommand": "...",
+    "description": "Summary of how to run the project"
+  },
+  "commands": {
+    "install": "Command to install dependencies",
+    "build": "Command to build/compile",
+    "start": "Command to run in dev mode"
+  },
   "todos": [
     {"id": 1, "task": "Task description", "status": "pending"},
     {"id": 2, "task": "Task description", "status": "pending"}
@@ -19,10 +36,13 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
   ]
 }
 
-Choose appropriate files based on the project type. For web projects use html/css/js. For Python scripts use .py files. For Node.js use .js or .ts files.`
+Project target profile:
+${describeLanguageProfile(profile)}
 
-async function generateWithClaude(prompt: string, model: string) {
-  const claude = getClaudeClient()
+Make sure file extensions and commands align with the target language/runtime. Prefer modern tooling (App Router for Next.js, FastAPI for Python APIs, cargo for Rust, go modules, etc).`
+
+async function generateWithClaude(prompt: string, model: string, apiKey?: string) {
+  const claude = getClaudeClient(apiKey)
   const response = await claude.messages.create({
     model: model,
     max_tokens: 2000,
@@ -31,8 +51,8 @@ async function generateWithClaude(prompt: string, model: string) {
   return response.content[0].type === 'text' ? response.content[0].text : '{}'
 }
 
-async function generateWithGemini(prompt: string, model: string) {
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY
+async function generateWithGemini(prompt: string, model: string, apiKeyOverride?: string) {
+  const apiKey = apiKeyOverride || process.env.NEXT_PUBLIC_GEMINI_API_KEY
   if (!apiKey) {
     throw new Error('Gemini API key not configured')
   }
@@ -43,12 +63,21 @@ async function generateWithGemini(prompt: string, model: string) {
   return response.text()
 }
 
-function parseProjectPlan(text: string) {
+function parseProjectPlan(text: string, fallbackProfile: LanguageProfile) {
   try {
     // Try to extract JSON from the response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
     if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
+      const parsed = JSON.parse(jsonMatch[0])
+      const mergedProfile = mergeLanguageProfile(fallbackProfile, parsed.languageProfile)
+      return {
+        ...parsed,
+        language: parsed.language || mergedProfile.language,
+        runtime: parsed.runtime || mergedProfile.runtime,
+        framework: parsed.framework || mergedProfile.framework,
+        commands: parsed.commands || {},
+        languageProfile: mergedProfile,
+      }
     }
   } catch (e) {
     console.error('Failed to parse project plan:', e)
@@ -58,28 +87,39 @@ function parseProjectPlan(text: string) {
   return {
     name: 'project',
     type: 'web',
-    language: 'html',
+    language: fallbackProfile.language,
+    runtime: fallbackProfile.runtime,
+    framework: fallbackProfile.framework,
+    languageProfile: fallbackProfile,
+    commands: {
+      install: fallbackProfile.packageManager || 'none',
+      build: fallbackProfile.buildCommand || 'none',
+      start: fallbackProfile.startCommand || 'none',
+    },
     todos: [{ id: 1, task: 'Build project', status: 'pending' }],
     files: [{ path: 'index.html', type: 'html', description: 'Main file' }],
   }
 }
 
 export async function POST(req: NextRequest) {
-  const { prompt, model = FALLBACK_MODEL } = await req.json()
+  const { prompt, model = FALLBACK_MODEL, languagePreference, apiKeys } = await req.json()
+  const detectedProfile = detectLanguageProfile(prompt, languagePreference)
+  const claudeKey = apiKeys?.claude?.apiKey
+  const geminiKey = apiKeys?.gemini?.apiKey
   
-  const projectPrompt = PROJECT_PROMPT(prompt)
+  const projectPrompt = PROJECT_PROMPT(prompt, detectedProfile)
   let responseText = ''
   let usedModel = model
 
   try {
     if (isGeminiModel(model)) {
-      responseText = await generateWithGemini(projectPrompt, model)
+      responseText = await generateWithGemini(projectPrompt, model, geminiKey)
     } else if (isClaudeModel(model)) {
-      responseText = await generateWithClaude(projectPrompt, model)
+      responseText = await generateWithClaude(projectPrompt, model, claudeKey)
     } else {
       // Unknown model, try Claude fallback
       usedModel = FALLBACK_MODEL
-      responseText = await generateWithClaude(projectPrompt, FALLBACK_MODEL)
+      responseText = await generateWithClaude(projectPrompt, FALLBACK_MODEL, claudeKey)
     }
   } catch (error: any) {
     console.error(`Failed with ${model}, trying fallback:`, error.message)
@@ -88,7 +128,7 @@ export async function POST(req: NextRequest) {
     if (model !== FALLBACK_MODEL) {
       try {
         usedModel = FALLBACK_MODEL
-        responseText = await generateWithClaude(projectPrompt, FALLBACK_MODEL)
+        responseText = await generateWithClaude(projectPrompt, FALLBACK_MODEL, claudeKey)
       } catch (fallbackError: any) {
         const { message } = handleClaudeError(fallbackError)
         return NextResponse.json(
@@ -105,6 +145,6 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const plan = parseProjectPlan(responseText)
+  const plan = parseProjectPlan(responseText, detectedProfile)
   return NextResponse.json({ plan, model: usedModel })
 }

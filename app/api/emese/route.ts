@@ -19,12 +19,12 @@ You have complete access to:
 - **Calendar**: Events, schedules, appointments
 - **News**: Latest articles and summaries
 - **Maps**: Navigation, locations, addresses
-- **Brainstorm**: Code projects, files being worked on
+- **Cursor**: Code projects, files being worked on
 - **Messages**: Chat history (though respect privacy)
 
 ### 3. Available Apps & Their Functions
 - **Messages** (💬): Chat interface (you live here!)
-- **Brainstorm** (💡): Code generation, multi-language support, project management
+- **Cursor** (🖥️): Code generation, multi-language support, project management
 - **Safari** (🔍): Web search using Serper API + intelligent answers
 - **iTunes** (🎵): Spotify playback with Web Playback SDK
 - **Calendar** (📅): Schedule and events (Google Calendar integration)
@@ -184,7 +184,8 @@ function parseActionsFromText(text: string): Action[] {
     'open maps': { type: 'open_app', app: 'maps' },
     'open news': { type: 'open_app', app: 'news' },
     'open health': { type: 'open_app', app: 'health' },
-    'open brainstorm': { type: 'open_app', app: 'brainstorm' },
+    'open cursor': { type: 'open_app', app: 'cursor' },
+    'open brainstorm': { type: 'open_app', app: 'cursor' },
     'open messages': { type: 'open_app', app: 'messages' },
     'open finder': { type: 'open_app', app: 'finder' },
     'open notion': { type: 'open_app', app: 'notion' },

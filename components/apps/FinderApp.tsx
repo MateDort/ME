@@ -49,7 +49,7 @@ const mockFileSystem: Record<string, FileItem[]> = {
   ],
   '/applications': [
     { name: 'MEOS', type: 'folder', icon: '💻', modified: 'Nov 25, 2025' },
-    { name: 'Brainstorm', type: 'folder', icon: '💡', modified: 'Nov 25, 2025' },
+    { name: 'Cursor', type: 'folder', icon: '🖥️', modified: 'Nov 25, 2025' },
     { name: 'Messages', type: 'folder', icon: '💬', modified: 'Nov 25, 2025' },
     { name: 'Safari', type: 'folder', icon: '🔍', modified: 'Nov 25, 2025' },
   ],
