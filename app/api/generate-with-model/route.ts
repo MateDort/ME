@@ -7,6 +7,14 @@ import { describeLanguageProfile, mergeLanguageProfile, DEFAULT_LANGUAGE_PROFILE
 
 export async function POST(req: NextRequest) {
   try {
+    let body
+    try {
+      body = await req.json()
+    } catch (parseError) {
+      console.error('Generate API: Failed to parse request body', parseError)
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    }
+
     const {
       prompt,
       model,
@@ -19,18 +27,41 @@ export async function POST(req: NextRequest) {
       todo,
       languageProfile,
       apiKeys,
-    } = await req.json()
+    } = body
 
     if (!model) {
+      console.error('Generate API: Model is missing')
       return NextResponse.json({ error: 'Model is required' }, { status: 400 })
     }
 
-    const isClaude = CLAUDE_MODELS.includes(model)
-    const isGemini = GEMINI_MODELS.includes(model)
+    // Normalize model name to handle old formats and aliases
+    let normalizedModel = model
+    // Handle old format: claude-opus-4.5-20251124 -> claude-opus-4-5-20251101
+    if (model === 'claude-opus-4.5-20251124' || model === 'claude-opus-4-5-20251124') {
+      normalizedModel = 'claude-opus-4-5-20251101'
+    } else if (model === 'claude-sonnet-4.5-20250929' || model === 'claude-sonnet-4-5-20250929') {
+      normalizedModel = 'claude-sonnet-4-5-20250929'
+    } else if (model === 'claude-haiku-4.5-20251001' || model === 'claude-haiku-4-5-20251001') {
+      normalizedModel = 'claude-haiku-4-5-20251001'
+    }
+
+    const isClaude = CLAUDE_MODELS.includes(normalizedModel)
+    const isGemini = GEMINI_MODELS.includes(normalizedModel)
 
     if (!isClaude && !isGemini) {
-      return NextResponse.json({ error: 'Invalid model selected' }, { status: 400 })
+      console.error('Generate API: Invalid model', { 
+        originalModel: model,
+        normalizedModel,
+        availableClaude: CLAUDE_MODELS,
+        availableGemini: GEMINI_MODELS 
+      })
+      return NextResponse.json({ 
+        error: `Invalid model selected: ${model}. Available models: ${[...CLAUDE_MODELS, ...GEMINI_MODELS].join(', ')}` 
+      }, { status: 400 })
     }
+
+    // Use normalized model for the rest of the function
+    const finalModel = normalizedModel
 
     // Build context
     const context = existingFiles && existingFiles.length > 0
@@ -97,9 +128,24 @@ I answer questions about code and projects. I provide helpful explanations and g
         })
       }
 
+      // Set appropriate token limits based on model
+      // Claude 4.5 models: 64K max output (actually 64000, not 65536), 200K context (1M beta for Sonnet)
+      let maxTokens = 4096
+      if (finalModel.includes('4-5') || finalModel.includes('4.5')) {
+        maxTokens = 64000 // Claude 4.5 models support 64K tokens (64000 max)
+      } else if (finalModel.includes('4-1')) {
+        maxTokens = 32768 // Claude Opus 4.1 supports 32K tokens
+      } else if (finalModel.includes('opus')) {
+        maxTokens = 4096 // Claude 3 Opus has 4096 max
+      } else if (finalModel.includes('sonnet') || finalModel.includes('3-5')) {
+        maxTokens = 8192 // Sonnet and 3.5 models support 8192
+      } else if (finalModel.includes('haiku')) {
+        maxTokens = 4096 // Haiku has 4096 max
+      }
+
       const response = await claude.messages.create({
-        model: model,
-        max_tokens: model.includes('haiku') ? 4096 : 8192,
+        model: finalModel,
+        max_tokens: maxTokens,
         system: systemPrompt,
         messages,
       })
@@ -115,7 +161,7 @@ I answer questions about code and projects. I provide helpful explanations and g
 
       return NextResponse.json({ 
         response: cleanedText,
-        model: model,
+        model: finalModel,
       })
     } else if (isGemini) {
       const apiKey = apiKeys?.gemini?.apiKey || process.env.NEXT_PUBLIC_GEMINI_API_KEY
@@ -123,8 +169,20 @@ I answer questions about code and projects. I provide helpful explanations and g
         return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 })
       }
 
+      // Normalize Gemini model names (handle -latest suffix and 3.0 variants)
+      let geminiNormalized = finalModel
+      if (finalModel === 'gemini-3.0-pro') {
+        geminiNormalized = 'gemini-3.0-pro' // Use as-is if API supports it
+      } else if (finalModel === 'gemini-3.0-flash') {
+        geminiNormalized = 'gemini-3.0-flash' // Use as-is if API supports it
+      } else if (finalModel === 'gemini-1.5-pro-latest') {
+        geminiNormalized = 'gemini-1.5-pro'
+      } else if (finalModel === 'gemini-1.5-flash-latest') {
+        geminiNormalized = 'gemini-1.5-flash'
+      }
+
       const genAI = new GoogleGenerativeAI(apiKey)
-      const geminiModel = genAI.getGenerativeModel({ model: model })
+      const geminiModel = genAI.getGenerativeModel({ model: geminiNormalized })
 
       let fullPrompt = prompt
       if (mode === 'agent') {
@@ -155,7 +213,7 @@ Question: ${prompt}`
       }
 
       // Handle image if provided
-      if (image && model.includes('vision')) {
+      if (image && finalModel.includes('vision')) {
         const imagePart = {
           inlineData: {
             data: image.data,
@@ -167,7 +225,7 @@ Question: ${prompt}`
         const text = response.text()
         return NextResponse.json({ 
           response: text,
-          model: model,
+          model: finalModel,
         })
       } else {
         const result = await geminiModel.generateContent(fullPrompt)
@@ -183,7 +241,7 @@ Question: ${prompt}`
         
         return NextResponse.json({ 
           response: cleanedText,
-          model: model,
+          model: finalModel,
         })
       }
     }

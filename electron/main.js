@@ -28,11 +28,19 @@ const SAFE_COMMANDS = [
   'pnpm',
   'yarn',
   'bun',
+  'bunx',
   'node',
   'python',
   'python3',
   'pip',
   'pip3',
+  'uvicorn',
+  'gunicorn',
+  'flask',
+  'django-admin',
+  'tsx',
+  'ts-node',
+  'deno',
   'go',
   'cargo',
   'git',
@@ -166,13 +174,22 @@ app.whenReady().then(() => {
     const { base, args } = sanitizeCommand(command)
     const workingDirectory = resolveCwd(cwd)
 
+    // Build comprehensive PATH for cross-platform support
     const defaultPath =
-      '/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+      process.platform === 'darwin'
+        ? '/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+        : process.platform === 'win32'
+        ? 'C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\WindowsPowerShell\\v1.0'
+        : '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
     const systemPath = process.env.PATH ? `${process.env.PATH}:${defaultPath}` : defaultPath
 
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
-    const child = spawn('/usr/bin/env', [base, ...args], {
+    
+    // Use shell: true for cross-platform compatibility (macOS, Windows, Linux)
+    // This allows commands to be found in PATH naturally
+    const child = spawn(base, args, {
       cwd: workingDirectory,
+      shell: true,
       env: {
         ...process.env,
         PATH: systemPath,

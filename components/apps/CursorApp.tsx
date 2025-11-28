@@ -210,8 +210,8 @@ export default function CursorApp() {
     // Get project directory if available
     const projectDir =
       selectedProject?.id && selectedProject.id !== 'welcome'
-        ? `projects/${selectedProject.id}`
-        : undefined
+      ? `projects/${selectedProject.id}` 
+      : undefined
 
     const hasElectron =
       typeof window !== 'undefined' && (window as any).electronAPI?.terminal
@@ -309,11 +309,11 @@ export default function CursorApp() {
       } else {
         await fetch(`/api/terminal?id=${activeTerminalId}`, { method: 'DELETE' })
       }
-    } catch (e) {
-      console.error('Failed to stop command:', e)
+      } catch (e) {
+        console.error('Failed to stop command:', e)
     } finally {
       setActiveTerminalId(null)
-      abortControllerRef.current?.abort()
+    abortControllerRef.current?.abort()
     }
   }
 
@@ -1352,9 +1352,46 @@ export default function CursorApp() {
 
   const formatModelName = (m: string) => {
     if (m.includes('claude')) {
-      return m.replace('claude-3-', '').replace('claude-3.5-', '3.5-').replace('-20240307', '').replace('-20240229', '').replace('-20241022', '')
+      // Claude model formatting - clean and readable
+      let name = m
+        .replace('claude-opus-4-5-20251101', 'Claude Opus 4.5')
+        .replace('claude-sonnet-4-5-20250929', 'Claude Sonnet 4.5')
+        .replace('claude-haiku-4-5-20251001', 'Claude Haiku 4.5')
+        .replace('claude-opus-4-1-20250805', 'Claude Opus 4.1')
+        .replace('claude-3-5-', 'Claude 3.5 ')
+        .replace('claude-3-', 'Claude 3 ')
+        .replace('-20251101', '')
+        .replace('-20251001', '')
+        .replace('-20250929', '')
+        .replace('-20250805', '')
+        .replace('-20241022', '')
+        .replace('-20240307', '')
+        .replace('-20240229', '')
+      
+      // Capitalize first letter of model type
+      const parts = name.split(' ')
+      if (parts.length > 1) {
+        parts[parts.length - 1] = parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1)
+        name = parts.join(' ')
     }
-    return m.replace('gemini-', '').replace('1.5-', '1.5 ').replace('-latest', '')
+      return name
+    }
+    // Gemini model formatting
+    let name = m
+      .replace('gemini-3.0-pro', 'Gemini 3.0 Pro')
+      .replace('gemini-3.0-flash', 'Gemini 3.0 Flash')
+      .replace('gemini-1.5-pro-latest', 'Gemini 1.5 Pro (Latest)')
+      .replace('gemini-1.5-flash-latest', 'Gemini 1.5 Flash (Latest)')
+      .replace('gemini-1.5-pro', 'Gemini 1.5 Pro')
+      .replace('gemini-1.5-flash', 'Gemini 1.5 Flash')
+      .replace('gemini-pro', 'Gemini Pro')
+      .replace('gemini-', 'Gemini ')
+    
+    // Capitalize properly
+    if (!name.startsWith('Gemini')) {
+      name = 'Gemini ' + name
+    }
+    return name
   }
 
   const windowBackground = `
@@ -1881,7 +1918,7 @@ export default function CursorApp() {
                 )}
                 {selectedProject && selectedProject.id !== 'welcome' && (
                   <div className="flex items-center gap-1">
-                      {selectedProject.installCommand && selectedProject.installCommand !== 'none' && (
+                    {selectedProject.installCommand && selectedProject.installCommand !== 'none' && (
                       <button
                         onClick={() => {
                           if (terminalInstanceRef.current && !activeTerminalId) {
