@@ -87,17 +87,6 @@ const timeWallpapers: Record<TimeOfDay, string> = {
   `,
 }
 
-declare global {
-  interface Window {
-    electronAPI?: {
-      websites?: {
-        onOpened: (listener: (payload: { url: string; title?: string }) => void) => () => void
-        onClosed: (listener: (payload: { url: string }) => void) => () => void
-      }
-    }
-  }
-}
-
 export default function OSDesktop() {
   const { addNotification } = useOSStore()
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('midday')

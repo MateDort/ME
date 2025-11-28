@@ -3,26 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Terminal } from '@xterm/xterm'
 
-type ElectronTerminalAPI =
-  | undefined
-  | {
-      run: (command: string, options?: { cwd?: string }) => Promise<{ id: string }>
-      kill: (id: string) => Promise<{ ok: boolean; message?: string }>
-      onData: (id: string, listener: (data: string) => void) => () => void
-      onExit: (
-        id: string,
-        listener: (payload: { code: number; error?: string }) => void
-      ) => () => void
-    }
-
-declare global {
-  interface Window {
-    electronAPI?: {
-      terminal?: ElectronTerminalAPI
-    }
-  }
-}
-
 export default function TerminalApp() {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const termRef = useRef<Terminal | null>(null)
