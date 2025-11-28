@@ -57,7 +57,14 @@ export interface ElectronProcessesAPI {
 
 export interface ElectronWebsitesAPI {
   detectURLs(text: string): Promise<string[]>
-  open(url: string, title?: string): Promise<{ ok: boolean; message?: string }>
+  open(url: string, title?: string): Promise<{ ok: boolean; message?: string; reused?: boolean }>
+  close(url: string): Promise<{ ok: boolean; message?: string }>
+  onOpened(
+    listener: (payload: { url: string; title?: string }) => void
+  ): () => void
+  onClosed(
+    listener: (payload: { url: string }) => void
+  ): () => void
 }
 
 export interface ElectronSystemAPI {

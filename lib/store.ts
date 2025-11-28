@@ -5,6 +5,11 @@ export interface Window {
   id: string
   title: string
   component: string
+  // Optional metadata for special windows (e.g., external websites)
+  meta?: {
+    url?: string
+    [key: string]: any
+  }
   x: number
   y: number
   width: number

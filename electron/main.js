@@ -41,6 +41,9 @@ const SAFE_COMMANDS = [
 // Map<id, { child, cwd }>
 const ACTIVE_PROCESSES = new Map()
 
+// Map<url, BrowserWindow> for embedded websites
+const WEBSITE_WINDOWS = new Map()
+
 let mainWindow = null
 
 function sanitizeCommand(input) {
@@ -284,13 +287,66 @@ app.whenReady().then(() => {
     return Array.from(new Set(matches))
   })
 
-  // Stub for future BrowserView integration (Phase 5)
   ipcMain.handle('websites:open', (_event, payload) => {
-    const { url: targetUrl } = payload || {}
+    const { url: targetUrl, title } = payload || {}
     if (!targetUrl) {
       return { ok: false, message: 'URL is required.' }
     }
-    // Actual BrowserView/window management will be implemented in Phase 5.
+
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return { ok: false, message: 'Main window is not available.' }
+    }
+
+    // If we already have a window for this URL, focus it
+    const existing = WEBSITE_WINDOWS.get(targetUrl)
+    if (existing && !existing.isDestroyed()) {
+      existing.focus()
+      return { ok: true, reused: true }
+    }
+
+    const child = new BrowserWindow({
+      parent: mainWindow,
+      width: 1200,
+      height: 800,
+      autoHideMenuBar: true,
+      backgroundColor: '#000000',
+      webPreferences: {
+        sandbox: true,
+      },
+      title: title || targetUrl,
+    })
+
+    child.loadURL(targetUrl)
+    WEBSITE_WINDOWS.set(targetUrl, child)
+
+    child.on('closed', () => {
+      WEBSITE_WINDOWS.delete(targetUrl)
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('websites:closed', { url: targetUrl })
+      }
+    })
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('websites:opened', {
+        url: targetUrl,
+        title: child.getTitle(),
+      })
+    }
+
+    return { ok: true, reused: false }
+  })
+
+  ipcMain.handle('websites:close', (_event, targetUrl) => {
+    if (!targetUrl) {
+      return { ok: false, message: 'URL is required.' }
+    }
+    const win = WEBSITE_WINDOWS.get(targetUrl)
+    if (!win || win.isDestroyed()) {
+      WEBSITE_WINDOWS.delete(targetUrl)
+      return { ok: false, message: 'Website window not found.' }
+    }
+    win.close()
+    WEBSITE_WINDOWS.delete(targetUrl)
     return { ok: true }
   })
 

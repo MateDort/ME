@@ -138,7 +138,6 @@ export default function CursorApp() {
         background: '#1e1e1e',
         foreground: '#d4d4d4',
         cursor: '#aeafad',
-        selection: '#264f78',
         black: '#000000',
         red: '#cd3131',
         green: '#0dbc79',
@@ -209,9 +208,45 @@ export default function CursorApp() {
     term.write('\r\n')
 
     // Get project directory if available
-    const projectDir = selectedProject?.id && selectedProject.id !== 'welcome' 
-      ? `projects/${selectedProject.id}` 
-      : undefined
+    const projectDir =
+      selectedProject?.id && selectedProject.id !== 'welcome'
+        ? `projects/${selectedProject.id}`
+        : undefined
+
+    const hasElectron =
+      typeof window !== 'undefined' && (window as any).electronAPI?.terminal
+
+    // Prefer Electron backend when available (desktop shell)
+    if (hasElectron) {
+      try {
+        const api = (window as any).electronAPI.terminal
+        const { id } = await api.run(command, { cwd: projectDir })
+        setActiveTerminalId(id)
+
+        const disposeData = api.onData(id, (data: string) => {
+          term.write(data)
+        })
+
+        const disposeExit = api.onExit(
+          id,
+          ({ code, error }: { code: number; error?: string }) => {
+            if (error) {
+              term.write(`\r\n\x1b[31mError: ${error}\x1b[0m\r\n`)
+            }
+            term.write(`\r\nProcess exited with code ${code}\r\n`)
+            term.write(`\x1b[36m${getTerminalPrompt()}\x1b[0m`)
+            setActiveTerminalId(null)
+            disposeData()
+            disposeExit()
+          }
+        )
+      } catch (error: any) {
+        term.write(`\r\n\x1b[31mError: ${error.message}\x1b[0m\r\n`)
+        term.write(`\x1b[36m${getTerminalPrompt()}\x1b[0m`)
+        setActiveTerminalId(null)
+      }
+      return
+    }
 
     try {
       abortControllerRef.current = new AbortController()
@@ -260,15 +295,26 @@ export default function CursorApp() {
   }
 
   const stopTerminalCommand = async () => {
-    if (activeTerminalId) {
-      try {
-        await fetch(`/api/terminal?id=${activeTerminalId}`, { method: 'DELETE' })
-      } catch (e) {
-        console.error('Failed to stop command:', e)
-      }
-      setActiveTerminalId(null)
+    if (!activeTerminalId) {
+      abortControllerRef.current?.abort()
+      return
     }
-    abortControllerRef.current?.abort()
+
+    const hasElectron =
+      typeof window !== 'undefined' && (window as any).electronAPI?.terminal
+
+    try {
+      if (hasElectron) {
+        await (window as any).electronAPI.terminal.kill(activeTerminalId)
+      } else {
+        await fetch(`/api/terminal?id=${activeTerminalId}`, { method: 'DELETE' })
+      }
+    } catch (e) {
+      console.error('Failed to stop command:', e)
+    } finally {
+      setActiveTerminalId(null)
+      abortControllerRef.current?.abort()
+    }
   }
 
   const getTerminalPrompt = () => {
@@ -1835,12 +1881,12 @@ export default function CursorApp() {
                 )}
                 {selectedProject && selectedProject.id !== 'welcome' && (
                   <div className="flex items-center gap-1">
-                    {selectedProject.installCommand && selectedProject.installCommand !== 'none' && (
+                      {selectedProject.installCommand && selectedProject.installCommand !== 'none' && (
                       <button
                         onClick={() => {
                           if (terminalInstanceRef.current && !activeTerminalId) {
                             terminalInstanceRef.current.write(`\r\n\x1b[33m$ ${selectedProject.installCommand}\x1b[0m\r\n`)
-                            runTerminalCommand(selectedProject.installCommand)
+                            runTerminalCommand(selectedProject.installCommand || '')
                           }
                         }}
                         className="px-2 py-0.5 text-[10px] rounded border border-[#4e8dec] bg-[#4e8dec]/20 text-[#4e8dec] hover:bg-[#4e8dec]/30 disabled:opacity-40"
@@ -1854,7 +1900,7 @@ export default function CursorApp() {
                         onClick={() => {
                           if (terminalInstanceRef.current && !activeTerminalId) {
                             terminalInstanceRef.current.write(`\r\n\x1b[33m$ ${selectedProject.buildCommand}\x1b[0m\r\n`)
-                            runTerminalCommand(selectedProject.buildCommand)
+                            runTerminalCommand(selectedProject.buildCommand || '')
                           }
                         }}
                         className="px-2 py-0.5 text-[10px] rounded border border-[#4e8dec] bg-[#4e8dec]/20 text-[#4e8dec] hover:bg-[#4e8dec]/30 disabled:opacity-40"
@@ -1868,7 +1914,7 @@ export default function CursorApp() {
                         onClick={() => {
                           if (terminalInstanceRef.current && !activeTerminalId) {
                             terminalInstanceRef.current.write(`\r\n\x1b[33m$ ${selectedProject.startCommand}\x1b[0m\r\n`)
-                            runTerminalCommand(selectedProject.startCommand)
+                            runTerminalCommand(selectedProject.startCommand || '')
                           }
                         }}
                         className="px-2 py-0.5 text-[10px] rounded border border-[#0dbc79] bg-[#0dbc79]/20 text-[#0dbc79] hover:bg-[#0dbc79]/30 disabled:opacity-40"

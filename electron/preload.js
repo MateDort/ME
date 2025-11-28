@@ -63,6 +63,23 @@ function createWebsitesAPI() {
     open(url, title) {
       return ipcRenderer.invoke('websites:open', { url, title })
     },
+    close(url) {
+      return ipcRenderer.invoke('websites:close', url)
+    },
+    onOpened(listener) {
+      const handler = (_event, payload) => listener(payload)
+      ipcRenderer.on('websites:opened', handler)
+      return () => {
+        ipcRenderer.removeListener('websites:opened', handler)
+      }
+    },
+    onClosed(listener) {
+      const handler = (_event, payload) => listener(payload)
+      ipcRenderer.on('websites:closed', handler)
+      return () => {
+        ipcRenderer.removeListener('websites:closed', handler)
+      }
+    },
   }
 }
 

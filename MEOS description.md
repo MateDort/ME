@@ -180,3 +180,32 @@ EMESE the main AI agent:
 - she is able to answer questions collecting data from multiple apps e.g: should i take my umbrella with me, emese can open check the weather app for weather schedule app to see when user will get back and leaves and provide user with an answer like; The weather at 2pm will be sunny but there will be some rain just before you are scheduled to come home, so i would take it with me just in case
 - has access to open search controll any apps e.g: open cursor and make a snake game, or make a snake game
 - run commands inside me OS to outside e.g: call my doctor and schedule an appointment when I am free - emese checks doctors number and schedule and calls the phone number using the twillio number and makes a full phone call with the doctor understandfing the task the goal and users questions. 
+
+
+High-level goals (after full build-out)
+CursorApp as a general project builder
+Create totally new projects (not MEOS-only) with real folders on disk.
+Open existing repos from disk (including the full MEOS repo), show every file, edit and save them.
+Use a real terminal per project (cwd per project) to run npm, node, python, git, etc.
+Real terminal + filesystem in MEOS (Electron, including Raspberry Pi)
+Terminal apps (Cursor terminal + standalone Terminal app) run real shell commands via Electron.
+Files created/edited in these terminals or via APIs are real files in the repo (MEOS or other projects).
+Safe but powerful: no command-chaining injection, but enough to build, test, and run apps.
+Emese as system-level agent
+Understand natural-language OS tasks (open apps, move windows, check multiple apps for info).
+For code tasks, either:
+Open CursorApp and delegate full “Cursor-style” agentic editing, or
+Directly use filesystem + terminal APIs to edit files and run commands.
+Handle higher-level flows like “change the UI of News to blue and move the title left” by:
+Finding the right files, editing them, saving, and (optionally) rebuilding/reloading.
+Git + multi-device workflow
+From any Electron MEOS instance (Mac or Raspberry Pi handheld), Emese/Cursor can:
+Run git status / add / commit / push via the terminal API.
+Push changes to GitHub for MEOS itself or any project built in CursorApp.
+You can be away from your laptop, use the Pi device, and still:
+Build new apps in CursorApp and push them.
+Edit MEOS and push updates.
+App & web embedding
+Detect local dev-server URLs from terminal output.
+Open those URLs in Electron child windows and surface them as “apps” in MEOS.
+Let Emese switch between and close these embedded apps as part of workflows.

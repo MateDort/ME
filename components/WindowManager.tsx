@@ -20,6 +20,7 @@ import AIDoormanApp from './apps/AIDoormanApp'
 import FinderApp from './apps/FinderApp'
 import NotionApp from './apps/NotionApp'
 import SystemPreferencesApp from './apps/SystemPreferencesApp'
+import WebsiteApp from './apps/WebsiteApp'
 
 const componentMap: Record<string, React.ComponentType<any>> = {
   messages: MessagesApp,
@@ -41,6 +42,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   finder: FinderApp,
   notion: NotionApp,
   preferences: SystemPreferencesApp,
+  website: WebsiteApp,
   blank: () => <div className="w-full h-full flex items-center justify-center text-gray-500">Empty Window</div>,
 }
 

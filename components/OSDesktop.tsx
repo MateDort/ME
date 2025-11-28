@@ -87,6 +87,17 @@ const timeWallpapers: Record<TimeOfDay, string> = {
   `,
 }
 
+declare global {
+  interface Window {
+    electronAPI?: {
+      websites?: {
+        onOpened: (listener: (payload: { url: string; title?: string }) => void) => () => void
+        onClosed: (listener: (payload: { url: string }) => void) => () => void
+      }
+    }
+  }
+}
+
 export default function OSDesktop() {
   const { addNotification } = useOSStore()
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>('midday')
@@ -107,6 +118,46 @@ export default function OSDesktop() {
     updateTime()
     const interval = setInterval(updateTime, 1000)
     return () => clearInterval(interval)
+  }, [])
+
+  // Track external website windows as first-class apps
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.electronAPI?.websites) return
+
+    const { addWindow, closeWindow, windows } = useOSStore.getState()
+
+    const offOpened = window.electronAPI.websites.onOpened(({ url, title }) => {
+      // Avoid duplicating windows for same URL
+      const existing = useOSStore
+        .getState()
+        .windows.find((w) => w.component === 'website' && w.meta?.url === url)
+      if (existing) return
+
+      addWindow({
+        id: `website-${Date.now()}`,
+        title: title || url || 'Website',
+        component: 'website',
+        meta: { url, title },
+        x: 140 + Math.random() * 160,
+        y: 80 + Math.random() * 120,
+        width: 720,
+        height: 520,
+        minimized: false,
+        maximized: false,
+      })
+    })
+
+    const offClosed = window.electronAPI.websites.onClosed(({ url }) => {
+      const state = useOSStore.getState()
+      state.windows
+        .filter((w) => w.component === 'website' && w.meta?.url === url)
+        .forEach((w) => closeWindow(w.id))
+    })
+
+    return () => {
+      offOpened?.()
+      offClosed?.()
+    }
   }, [])
 
   useEffect(() => {
