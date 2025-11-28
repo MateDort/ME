@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CLAUDE_MODELS, GEMINI_MODELS, DEFAULT_AGENT_MODEL, DEFAULT_ASK_MODEL } from '@/lib/models'
+import { CLAUDE_MODELS, GEMINI_MODELS, GPT_MODELS, DEFAULT_AGENT_MODEL, DEFAULT_ASK_MODEL, isGPTModel } from '@/lib/models'
 import { LanguageProfile, DEFAULT_LANGUAGE_PROFILE, mergeLanguageProfile } from '@/lib/language'
 import { ApiProvider, getApiKey } from '@/lib/api-config'
 import { Terminal } from '@xterm/xterm'
@@ -77,7 +77,7 @@ type ApiKeyPayload = Partial<Record<ApiProvider, { apiKey: string; endpoint?: st
 const getProviderFromModel = (modelName: string): ApiProvider => {
   if (CLAUDE_MODELS.includes(modelName)) return 'claude'
   if (GEMINI_MODELS.includes(modelName)) return 'gemini'
-  if (modelName.toLowerCase().includes('gpt') || modelName.toLowerCase().includes('openai')) return 'openai'
+  if (isGPTModel(modelName)) return 'openai'
   return 'custom'
 }
 
@@ -116,6 +116,8 @@ export default function CursorApp() {
   const [isRunningCommand, setIsRunningCommand] = useState(false)
   const [activeTerminalId, setActiveTerminalId] = useState<string | null>(null)
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
+  const [inputDialog, setInputDialog] = useState<{ type: 'file' | 'folder' | null; onConfirm: (value: string) => void }>({ type: null, onConfirm: () => {} })
+  const [inputDialogValue, setInputDialogValue] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatScrollRef = useRef<HTMLDivElement>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
@@ -1297,45 +1299,65 @@ export default function CursorApp() {
 
   const handleNewFile = () => {
     if (!selectedProject) return
-    const fileName = prompt('Enter file name (e.g., newfile.js):')
-    if (!fileName) return
-    
-    const newFile: ProjectFile = {
-      path: fileName,
-      type: fileName.split('.').pop() || 'text',
-      content: '',
-      description: '',
-    }
-    
-    commitSelectedProjectUpdate((project) => ({
-      ...project,
-      files: [...project.files, newFile],
-    }))
-    
-    setSelectedFile(fileName)
+    setInputDialog({
+      type: 'file',
+      onConfirm: (fileName) => {
+        if (!fileName) {
+          setInputDialog({ type: null, onConfirm: () => {} })
+          setInputDialogValue('')
+          return
+        }
+        
+        const newFile: ProjectFile = {
+          path: fileName,
+          type: fileName.split('.').pop() || 'text',
+          content: '',
+          description: '',
+        }
+        
+        commitSelectedProjectUpdate((project) => ({
+          ...project,
+          files: [...project.files, newFile],
+        }))
+        
+        setSelectedFile(fileName)
+        setInputDialog({ type: null, onConfirm: () => {} })
+        setInputDialogValue('')
+      },
+    })
   }
 
   const handleNewFolder = () => {
     if (!selectedProject) return
-    const folderName = prompt('Enter folder name:')
-    if (!folderName) return
-    
-    // Create a placeholder file to represent the folder
-    // In a real implementation, you'd track folders separately
-    const newFile: ProjectFile = {
-      path: `${folderName}/.gitkeep`,
-      type: 'text',
-      content: '',
-      description: '',
-    }
-    
-    commitSelectedProjectUpdate((project) => ({
-      ...project,
-      files: [...project.files, newFile],
-    }))
-    
-    // Expand the new folder
-    setExpandedFolders((prev) => new Set([...prev, folderName]))
+    setInputDialog({
+      type: 'folder',
+      onConfirm: (folderName) => {
+        if (!folderName) {
+          setInputDialog({ type: null, onConfirm: () => {} })
+          setInputDialogValue('')
+          return
+        }
+        
+        // Create a placeholder file to represent the folder
+        // In a real implementation, you'd track folders separately
+        const newFile: ProjectFile = {
+          path: `${folderName}/.gitkeep`,
+          type: 'text',
+          content: '',
+          description: '',
+        }
+        
+        commitSelectedProjectUpdate((project) => ({
+          ...project,
+          files: [...project.files, newFile],
+        }))
+        
+        // Expand the new folder
+        setExpandedFolders((prev) => new Set([...prev, folderName]))
+        setInputDialog({ type: null, onConfirm: () => {} })
+        setInputDialogValue('')
+      },
+    })
   }
 
   const handleFileSelect = (filePath: string) => {
@@ -1373,25 +1395,49 @@ export default function CursorApp() {
       if (parts.length > 1) {
         parts[parts.length - 1] = parts[parts.length - 1].charAt(0).toUpperCase() + parts[parts.length - 1].slice(1)
         name = parts.join(' ')
-    }
+      }
+      return name
+    } else if (m.includes('gemini')) {
+      // Gemini model formatting
+      let name = m
+        .replace('gemini-3-pro-preview', 'Gemini 3 Pro (Preview)')
+        .replace('gemini-2.5-pro', 'Gemini 2.5 Pro')
+        .replace('gemini-2.5-flash-lite', 'Gemini 2.5 Flash-Lite')
+        .replace('gemini-2.5-flash', 'Gemini 2.5 Flash')
+        .replace('gemini-2.0-flash-001', 'Gemini 2.0 Flash (Stable)')
+        .replace('gemini-2.0-flash', 'Gemini 2.0 Flash')
+        .replace('gemini-1.5-pro', 'Gemini 1.5 Pro')
+        .replace('gemini-1.5-flash', 'Gemini 1.5 Flash')
+        .replace('gemini-', 'Gemini ')
+      
+      // Capitalize properly
+      if (!name.startsWith('Gemini')) {
+        name = 'Gemini ' + name
+      }
+      return name
+    } else if (m.includes('gpt')) {
+      // GPT model formatting
+      let name = m
+        .replace('gpt-5.1-codex', 'GPT-5.1 Codex')
+        .replace('gpt-5-codex', 'GPT-5 Codex')
+        .replace('gpt-5.1', 'GPT-5.1')
+        .replace('gpt-5-mini', 'GPT-5 Mini')
+        .replace('gpt-5-nano', 'GPT-5 Nano')
+        .replace('gpt-5-pro', 'GPT-5 Pro')
+        .replace('gpt-5', 'GPT-5')
+        .replace('gpt-4.1-mini', 'GPT-4.1 Mini')
+        .replace('gpt-4.1-nano', 'GPT-4.1 Nano')
+        .replace('gpt-4.1', 'GPT-4.1')
+        .replace('gpt-4o-mini', 'GPT-4o Mini')
+        .replace('gpt-4o', 'GPT-4o')
+        .replace('gpt-4-turbo', 'GPT-4 Turbo')
+        .replace('gpt-4', 'GPT-4')
+        .replace('gpt-3.5-turbo', 'GPT-3.5 Turbo')
+        .replace('gpt-', 'GPT-')
+      
       return name
     }
-    // Gemini model formatting
-    let name = m
-      .replace('gemini-3.0-pro', 'Gemini 3.0 Pro')
-      .replace('gemini-3.0-flash', 'Gemini 3.0 Flash')
-      .replace('gemini-1.5-pro-latest', 'Gemini 1.5 Pro (Latest)')
-      .replace('gemini-1.5-flash-latest', 'Gemini 1.5 Flash (Latest)')
-      .replace('gemini-1.5-pro', 'Gemini 1.5 Pro')
-      .replace('gemini-1.5-flash', 'Gemini 1.5 Flash')
-      .replace('gemini-pro', 'Gemini Pro')
-      .replace('gemini-', 'Gemini ')
-    
-    // Capitalize properly
-    if (!name.startsWith('Gemini')) {
-      name = 'Gemini ' + name
-    }
-    return name
+    return m
   }
 
   const windowBackground = `
@@ -1405,6 +1451,7 @@ export default function CursorApp() {
   `
 
   return (
+    <>
     <div
       className="h-full w-full flex flex-col overflow-hidden text-[#1b1b1b]"
       style={{
@@ -1857,6 +1904,13 @@ export default function CursorApp() {
                       </option>
                     ))}
                   </optgroup>
+                  <optgroup label="GPT">
+                    {GPT_MODELS.map((m) => (
+                      <option key={m} value={m}>
+                        {formatModelName(m)}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
 
                 <div className="flex items-center gap-1">
@@ -1999,5 +2053,67 @@ export default function CursorApp() {
           </div>
         )}
       </div>
+
+      {/* Input Dialog Modal */}
+      {inputDialog.type && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}
+          onClick={() => {
+            setInputDialog({ type: null, onConfirm: () => {} })
+            setInputDialogValue('')
+          }}
+        >
+          <div
+            className="bg-white rounded-lg p-6 shadow-xl min-w-[400px]"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(240,242,250,0.95) 100%)',
+            }}
+          >
+            <h3 className="text-lg font-semibold mb-4 text-[#1b1b1b]">
+              {inputDialog.type === 'file' ? 'New File' : 'New Folder'}
+            </h3>
+            <input
+              type="text"
+              value={inputDialogValue}
+              onChange={(e) => setInputDialogValue(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  inputDialog.onConfirm(inputDialogValue)
+                } else if (e.key === 'Escape') {
+                  setInputDialog({ type: null, onConfirm: () => {} })
+                  setInputDialogValue('')
+                }
+              }}
+              placeholder={inputDialog.type === 'file' ? 'Enter file name (e.g., newfile.js)' : 'Enter folder name'}
+              className="w-full px-3 py-2 border border-[#c4cae0] rounded-lg mb-4 focus:outline-none focus:border-[#4e8dec]"
+              autoFocus
+            />
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setInputDialog({ type: null, onConfirm: () => {} })
+                  setInputDialogValue('')
+                }}
+                className="px-4 py-2 rounded-lg text-sm border border-[#c4cae0] bg-white text-[#5c667c] hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => inputDialog.onConfirm(inputDialogValue)}
+                className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
+                style={{
+                  background: 'linear-gradient(180deg, #4e8dec 0%, #316fce 100%)',
+                  boxShadow: '0 4px 10px rgba(49,111,206,0.35)',
+                }}
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

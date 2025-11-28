@@ -5,9 +5,16 @@ import { randomUUID } from 'crypto'
 
 const PROJECT_ROOT = process.cwd()
 const SAFE_COMMANDS = [
+  'cd', // Change directory (needed for navigation)
   'ls',
   'pwd',
   'cat',
+  'mkdir',
+  'touch',
+  'rm',
+  'rmdir',
+  'cp',
+  'mv',
   'npm',
   'npx',
   'pnpm',

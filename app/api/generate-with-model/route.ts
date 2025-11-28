@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { MATE_PROFILE } from '@/lib/mate-profile'
 import { getClaudeClient, handleClaudeError } from '@/lib/claude-client'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { CLAUDE_MODELS, GEMINI_MODELS } from '@/lib/models'
+import OpenAI from 'openai'
+import { CLAUDE_MODELS, GEMINI_MODELS, GPT_MODELS, isGPTModel } from '@/lib/models'
 import { describeLanguageProfile, mergeLanguageProfile, DEFAULT_LANGUAGE_PROFILE } from '@/lib/language'
 
 export async function POST(req: NextRequest) {
@@ -47,16 +48,18 @@ export async function POST(req: NextRequest) {
 
     const isClaude = CLAUDE_MODELS.includes(normalizedModel)
     const isGemini = GEMINI_MODELS.includes(normalizedModel)
+    const isGPT = isGPTModel(normalizedModel)
 
-    if (!isClaude && !isGemini) {
+    if (!isClaude && !isGemini && !isGPT) {
       console.error('Generate API: Invalid model', { 
         originalModel: model,
         normalizedModel,
         availableClaude: CLAUDE_MODELS,
-        availableGemini: GEMINI_MODELS 
+        availableGemini: GEMINI_MODELS,
+        availableGPT: GPT_MODELS
       })
       return NextResponse.json({ 
-        error: `Invalid model selected: ${model}. Available models: ${[...CLAUDE_MODELS, ...GEMINI_MODELS].join(', ')}` 
+        error: `Invalid model selected: ${model}. Available models: ${[...CLAUDE_MODELS, ...GEMINI_MODELS, ...GPT_MODELS].join(', ')}` 
       }, { status: 400 })
     }
 
@@ -169,12 +172,13 @@ I answer questions about code and projects. I provide helpful explanations and g
         return NextResponse.json({ error: 'Gemini API key not configured' }, { status: 500 })
       }
 
-      // Normalize Gemini model names (handle -latest suffix and 3.0 variants)
+      // Normalize Gemini model names (handle old format compatibility)
       let geminiNormalized = finalModel
+      // Handle old format compatibility
       if (finalModel === 'gemini-3.0-pro') {
-        geminiNormalized = 'gemini-3.0-pro' // Use as-is if API supports it
+        geminiNormalized = 'gemini-3-pro-preview' // Map to correct model code
       } else if (finalModel === 'gemini-3.0-flash') {
-        geminiNormalized = 'gemini-3.0-flash' // Use as-is if API supports it
+        geminiNormalized = 'gemini-2.5-flash' // Map to closest equivalent
       } else if (finalModel === 'gemini-1.5-pro-latest') {
         geminiNormalized = 'gemini-1.5-pro'
       } else if (finalModel === 'gemini-1.5-flash-latest') {
@@ -244,6 +248,93 @@ Question: ${prompt}`
           model: finalModel,
         })
       }
+    } else if (isGPT) {
+      const apiKey = apiKeys?.openai?.apiKey || apiKeys?.gpt?.apiKey || process.env.NEXT_PUBLIC_GPT_API_KEY
+      if (!apiKey) {
+        return NextResponse.json({ error: 'GPT API key not configured' }, { status: 500 })
+      }
+
+      const openai = new OpenAI({ apiKey })
+
+      let systemPrompt = ''
+      if (mode === 'agent') {
+        systemPrompt = `${MATE_PROFILE}
+
+I am building: ${projectDescription || 'a project'}
+${taskContext}${fileContext}
+Project target:
+${languageContext}
+
+I generate complete, working code.
+- For HTML files, include all necessary CSS and JavaScript inline if it's a single-file project
+- For JavaScript: Use BROWSER-COMPATIBLE code only. NO require(), NO Node.js modules, NO axios. Use fetch() and vanilla JS
+- Forms must use event.preventDefault() to prevent page navigation
+- All code must run client-side in a browser
+- Return ONLY the code, no markdown, no explanations${context}`
+      } else {
+        systemPrompt = `${MATE_PROFILE}
+
+Project target:
+${languageContext}
+
+I answer questions about code and projects. I provide helpful explanations and guidance.${context}`
+      }
+
+      const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: prompt },
+      ]
+
+      // Handle image if provided (GPT-4o and newer models support vision)
+      let imageContent: OpenAI.Chat.Completions.ChatCompletionContentPart[] | undefined
+      if (image && (finalModel.includes('gpt-4o') || finalModel.includes('gpt-5') || finalModel.includes('gpt-4.1'))) {
+        imageContent = [
+          {
+            type: 'image_url',
+            image_url: {
+              url: `data:${image.mimeType || 'image/png'};base64,${image.data}`,
+            },
+          },
+          {
+            type: 'text',
+            text: prompt,
+          },
+        ]
+        messages[1] = { role: 'user', content: imageContent }
+      }
+
+      // Set appropriate token limits based on model
+      let maxTokens = 4096
+      if (finalModel.includes('gpt-5')) {
+        maxTokens = 16384 // GPT-5 models support higher token limits
+      } else if (finalModel.includes('gpt-4.1')) {
+        maxTokens = 16384 // GPT-4.1 models support higher token limits
+      } else if (finalModel.includes('gpt-4o')) {
+        maxTokens = 16384 // GPT-4o supports higher token limits
+      } else if (finalModel.includes('gpt-4')) {
+        maxTokens = 8192 // GPT-4 Turbo supports 8K
+      }
+
+      const response = await openai.chat.completions.create({
+        model: finalModel,
+        messages: messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+        max_tokens: maxTokens,
+        temperature: mode === 'agent' ? 0.7 : 0.5,
+      })
+
+      const text = response.choices[0]?.message?.content || ''
+      
+      // Clean up markdown code blocks
+      const cleanedText = text
+        .replace(/^```[\w]*\n?/gm, '')
+        .replace(/```$/gm, '')
+        .replace(/^```/gm, '')
+        .trim()
+      
+      return NextResponse.json({ 
+        response: cleanedText,
+        model: finalModel,
+      })
     }
 
     return NextResponse.json({ error: 'Unsupported model' }, { status: 400 })

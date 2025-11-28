@@ -3,7 +3,7 @@ const url = require('url')
 const fs = require('fs')
 const fsp = require('fs/promises')
 const os = require('os')
-const { spawn } = require('child_process')
+const { spawn, exec } = require('child_process')
 const { app, BrowserWindow, globalShortcut, ipcMain, screen } = require('electron')
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
@@ -20,9 +20,16 @@ const PROJECT_ROOT = process.cwd()
 
 // Keep terminal commands safe and predictable
 const SAFE_COMMANDS = [
+  'cd', // Change directory (needed for navigation)
   'ls',
   'pwd',
   'cat',
+  'mkdir',
+  'touch',
+  'rm',
+  'rmdir',
+  'cp',
+  'mv',
   'npm',
   'npx',
   'pnpm',
@@ -171,7 +178,9 @@ app.whenReady().then(() => {
   // Terminal: run a command and stream output back to the renderer
   ipcMain.handle('terminal:run', (event, payload) => {
     const { command, cwd } = payload || {}
-    const { base, args } = sanitizeCommand(command)
+    
+    // Validate command (but keep original for shell execution)
+    sanitizeCommand(command)
     const workingDirectory = resolveCwd(cwd)
 
     // Build comprehensive PATH for cross-platform support
@@ -185,15 +194,15 @@ app.whenReady().then(() => {
 
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
     
-    // Use shell: true for cross-platform compatibility (macOS, Windows, Linux)
-    // This allows commands to be found in PATH naturally
-    const child = spawn(base, args, {
+    // Use exec for full command strings - it handles shell parsing better
+    // exec automatically uses the system shell and handles command + arguments correctly
+    const child = exec(command, {
       cwd: workingDirectory,
-      shell: true,
       env: {
         ...process.env,
         PATH: systemPath,
       },
+      maxBuffer: 1024 * 1024 * 10, // 10MB buffer for large outputs
     })
 
     ACTIVE_PROCESSES.set(id, { child, cwd: workingDirectory })
@@ -208,15 +217,21 @@ app.whenReady().then(() => {
       }
     }
 
-    child.stdout.on('data', (chunk) => {
-      sendSafe(dataChannel, chunk.toString())
-    })
-    child.stderr.on('data', (chunk) => {
-      sendSafe(dataChannel, chunk.toString())
-    })
+    // exec combines stdout and stderr, but we can still access them separately
+    if (child.stdout) {
+      child.stdout.on('data', (chunk) => {
+        sendSafe(dataChannel, chunk.toString())
+      })
+    }
+    
+    if (child.stderr) {
+      child.stderr.on('data', (chunk) => {
+        sendSafe(dataChannel, chunk.toString())
+      })
+    }
 
     child.on('close', (code) => {
-      sendSafe(exitChannel, { code })
+      sendSafe(exitChannel, { code: code || 0 })
       ACTIVE_PROCESSES.delete(id)
     })
 

@@ -13,13 +13,32 @@ export const CLAUDE_MODELS = [
 ]
 
 export const GEMINI_MODELS = [
-  'gemini-3.0-pro', // Gemini 3.0 Pro - Latest, most advanced (Nov 2025)
-  'gemini-3.0-flash', // Gemini 3.0 Flash - Latest, fast (Nov 2025)
-  'gemini-1.5-pro-latest', // Gemini 1.5 Pro - Most capable
-  'gemini-1.5-flash-latest', // Gemini 1.5 Flash - Fast and capable
-  'gemini-1.5-pro', // Gemini 1.5 Pro - Stable
-  'gemini-1.5-flash', // Gemini 1.5 Flash - Stable
-  'gemini-pro', // Gemini Pro - Legacy
+  'gemini-3-pro-preview', // Gemini 3 Pro - Most intelligent, multimodal understanding (Preview, Nov 2025)
+  'gemini-2.5-pro', // Gemini 2.5 Pro - State-of-the-art thinking model (Stable, Jun 2025)
+  'gemini-2.5-flash', // Gemini 2.5 Flash - Best price-performance, fast (Stable, Jun 2025)
+  'gemini-2.5-flash-lite', // Gemini 2.5 Flash-Lite - Ultra fast, cost-efficient (Stable, Jul 2025)
+  'gemini-2.0-flash', // Gemini 2.0 Flash - Second generation workhorse, 1M token context (Latest, Feb 2025)
+  'gemini-2.0-flash-001', // Gemini 2.0 Flash - Stable version
+  'gemini-1.5-pro', // Gemini 1.5 Pro - Previous generation (Legacy)
+  'gemini-1.5-flash', // Gemini 1.5 Flash - Previous generation (Legacy)
+]
+
+export const GPT_MODELS = [
+  'gpt-5.1', // GPT-5.1 - Best for coding and agentic tasks (latest)
+  'gpt-5-mini', // GPT-5 mini - Faster, cost-efficient
+  'gpt-5-nano', // GPT-5 nano - Fastest, most cost-efficient
+  'gpt-5-pro', // GPT-5 pro - Smarter and more precise
+  'gpt-5', // GPT-5 - Previous intelligent reasoning model
+  'gpt-5.1-codex', // GPT-5.1 Codex - Optimized for agentic coding
+  'gpt-5-codex', // GPT-5 Codex - Optimized for agentic coding
+  'gpt-4.1', // GPT-4.1 - Smartest non-reasoning model
+  'gpt-4.1-mini', // GPT-4.1 mini - Smaller, faster version
+  'gpt-4.1-nano', // GPT-4.1 nano - Fastest, most cost-efficient
+  'gpt-4o', // GPT-4o - Fast, intelligent, flexible
+  'gpt-4o-mini', // GPT-4o mini - Fast, affordable small model
+  'gpt-4-turbo', // GPT-4 Turbo - Older high-intelligence model
+  'gpt-4', // GPT-4 - Older high-intelligence model
+  'gpt-3.5-turbo', // GPT-3.5 Turbo - Legacy model for cheaper tasks
 ]
 
 // Default models - using latest best models
@@ -34,3 +53,6 @@ export const isClaudeModel = (model: string) => CLAUDE_MODELS.includes(model)
 
 // Check if model is Gemini
 export const isGeminiModel = (model: string) => GEMINI_MODELS.includes(model)
+
+// Check if model is GPT
+export const isGPTModel = (model: string) => GPT_MODELS.includes(model)
