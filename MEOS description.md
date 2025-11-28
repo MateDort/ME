@@ -33,6 +33,9 @@ health(whoop)
 News
 Language learning
 Journal 
+mail
+whatsapp
+phone app
 everything is unlimited 
 
 Design guidlines:
@@ -173,3 +176,7 @@ I’ll include **(1)** what typified apps/UI in ~2003, and **(2)** how you can m
 * For the AI/agentic part: think of an assistant panel—even styled with retro UI (e.g., in a 32×32 icon in a sidebar) but powered by modern LLM/agentic logic.
 * Consider “retro interactions” like sounds or little window toggles (optional) but avoid slowing down user tasks: AI automation should remove friction, not add to it.
 
+EMESE the main AI agent:
+- she is able to answer questions collecting data from multiple apps e.g: should i take my umbrella with me, emese can open check the weather app for weather schedule app to see when user will get back and leaves and provide user with an answer like; The weather at 2pm will be sunny but there will be some rain just before you are scheduled to come home, so i would take it with me just in case
+- has access to open search controll any apps e.g: open cursor and make a snake game, or make a snake game
+- run commands inside me OS to outside e.g: call my doctor and schedule an appointment when I am free - emese checks doctors number and schedule and calls the phone number using the twillio number and makes a full phone call with the doctor understandfing the task the goal and users questions. 

@@ -1,5 +1,9 @@
 const path = require('path')
 const url = require('url')
+const fs = require('fs')
+const fsp = require('fs/promises')
+const os = require('os')
+const { spawn } = require('child_process')
 const { app, BrowserWindow, globalShortcut, ipcMain, screen } = require('electron')
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged
@@ -12,7 +16,64 @@ const PROD_INDEX_PATH =
     slashes: true,
   })
 
+const PROJECT_ROOT = process.cwd()
+
+// Keep terminal commands safe and predictable
+const SAFE_COMMANDS = [
+  'ls',
+  'pwd',
+  'cat',
+  'npm',
+  'npx',
+  'pnpm',
+  'yarn',
+  'bun',
+  'node',
+  'python',
+  'python3',
+  'pip',
+  'pip3',
+  'go',
+  'cargo',
+  'git',
+]
+
+// Map<id, { child, cwd }>
+const ACTIVE_PROCESSES = new Map()
+
 let mainWindow = null
+
+function sanitizeCommand(input) {
+  if (!input || typeof input !== 'string') {
+    throw new Error('Command is required.')
+  }
+  if (/[;&|><]/.test(input)) {
+    throw new Error('Command chaining and redirection are not allowed.')
+  }
+  const parts = input.trim().split(/\s+/)
+  const base = parts[0]
+  if (!SAFE_COMMANDS.includes(base)) {
+    throw new Error(`"${base}" is not permitted in the MEOS terminal.`)
+  }
+  return { base, args: parts.slice(1) }
+}
+
+function resolveCwd(requestedCwd) {
+  if (!requestedCwd) return PROJECT_ROOT
+  const resolved = path.resolve(PROJECT_ROOT, requestedCwd)
+  if (!resolved.startsWith(PROJECT_ROOT)) {
+    throw new Error('Invalid working directory.')
+  }
+  return resolved
+}
+
+function resolveSafePath(requestPath = '.') {
+  const resolved = path.resolve(PROJECT_ROOT, requestPath)
+  if (!resolved.startsWith(PROJECT_ROOT)) {
+    throw new Error('Path outside project root is not allowed.')
+  }
+  return resolved
+}
 
 function getDisplayBounds() {
   try {
@@ -91,6 +152,167 @@ app.whenReady().then(() => {
   createMainWindow()
   registerGlobalShortcuts()
   ipcMain.handle('app:ping', () => 'pong')
+
+  //
+  // OS-level API handlers (Phase 3)
+  //
+
+  // Terminal: run a command and stream output back to the renderer
+  ipcMain.handle('terminal:run', (event, payload) => {
+    const { command, cwd } = payload || {}
+    const { base, args } = sanitizeCommand(command)
+    const workingDirectory = resolveCwd(cwd)
+
+    const defaultPath =
+      '/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+    const systemPath = process.env.PATH ? `${process.env.PATH}:${defaultPath}` : defaultPath
+
+    const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`
+    const child = spawn('/usr/bin/env', [base, ...args], {
+      cwd: workingDirectory,
+      env: {
+        ...process.env,
+        PATH: systemPath,
+      },
+    })
+
+    ACTIVE_PROCESSES.set(id, { child, cwd: workingDirectory })
+
+    const webContents = event.sender
+    const dataChannel = `terminal:data:${id}`
+    const exitChannel = `terminal:exit:${id}`
+
+    const sendSafe = (channel, data) => {
+      if (!webContents.isDestroyed()) {
+        webContents.send(channel, data)
+      }
+    }
+
+    child.stdout.on('data', (chunk) => {
+      sendSafe(dataChannel, chunk.toString())
+    })
+    child.stderr.on('data', (chunk) => {
+      sendSafe(dataChannel, chunk.toString())
+    })
+
+    child.on('close', (code) => {
+      sendSafe(exitChannel, { code })
+      ACTIVE_PROCESSES.delete(id)
+    })
+
+    child.on('error', (error) => {
+      sendSafe(dataChannel, `\nError: ${error.message}\n`)
+      sendSafe(exitChannel, { code: -1, error: error.message })
+      ACTIVE_PROCESSES.delete(id)
+    })
+
+    return { id }
+  })
+
+  ipcMain.handle('terminal:kill', (_event, id) => {
+    const entry = ACTIVE_PROCESSES.get(id)
+    if (!entry) return { ok: false, message: 'Command not found or already finished.' }
+    try {
+      entry.child.kill('SIGTERM')
+      ACTIVE_PROCESSES.delete(id)
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, message: error.message || 'Failed to kill process.' }
+    }
+  })
+
+  ipcMain.handle('processes:list', () => {
+    const list = []
+    ACTIVE_PROCESSES.forEach((value, id) => {
+      list.push({
+        id,
+        pid: value.child.pid,
+        cwd: value.cwd,
+        command: value.child.spawnargs.join(' '),
+      })
+    })
+    return list
+  })
+
+  ipcMain.handle('processes:kill', (_event, id) => {
+    const entry = ACTIVE_PROCESSES.get(id)
+    if (!entry) return { ok: false, message: 'Process not found.' }
+    try {
+      entry.child.kill('SIGTERM')
+      ACTIVE_PROCESSES.delete(id)
+      return { ok: true }
+    } catch (error) {
+      return { ok: false, message: error.message || 'Failed to kill process.' }
+    }
+  })
+
+  // Filesystem APIs
+  ipcMain.handle('fs:readFile', async (_event, relPath) => {
+    const filePath = resolveSafePath(relPath)
+    const data = await fsp.readFile(filePath, 'utf8')
+    return data
+  })
+
+  ipcMain.handle('fs:writeFile', async (_event, payload) => {
+    const { path: relPath, content } = payload || {}
+    const filePath = resolveSafePath(relPath)
+    await fsp.mkdir(path.dirname(filePath), { recursive: true })
+    await fsp.writeFile(filePath, content ?? '', 'utf8')
+    return { ok: true }
+  })
+
+  ipcMain.handle('fs:listDir', async (_event, relPath = '.') => {
+    const dirPath = resolveSafePath(relPath)
+    const entries = await fsp.readdir(dirPath, { withFileTypes: true })
+    return entries.map((entry) => ({
+      name: entry.name,
+      path: path.relative(PROJECT_ROOT, path.join(dirPath, entry.name)),
+      type: entry.isDirectory() ? 'directory' : 'file',
+    }))
+  })
+
+  // Website utilities
+  ipcMain.handle('websites:detect', (_event, text) => {
+    if (!text || typeof text !== 'string') return []
+    const regex =
+      /(https?:\/\/(?:localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):\d+\/?[^\s]*)/gi
+    const matches = []
+    let match
+    while ((match = regex.exec(text)) !== null) {
+      matches.push(match[1])
+    }
+    return Array.from(new Set(matches))
+  })
+
+  // Stub for future BrowserView integration (Phase 5)
+  ipcMain.handle('websites:open', (_event, payload) => {
+    const { url: targetUrl } = payload || {}
+    if (!targetUrl) {
+      return { ok: false, message: 'URL is required.' }
+    }
+    // Actual BrowserView/window management will be implemented in Phase 5.
+    return { ok: true }
+  })
+
+  // System info
+  ipcMain.handle('system:getInfo', () => {
+    return {
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch(),
+      cpus: os.cpus()?.length || 0,
+      totalMem: os.totalmem(),
+      freeMem: os.freemem(),
+      homeDir: os.homedir(),
+      projectRoot: PROJECT_ROOT,
+      isDev,
+    }
+  })
+
+  ipcMain.handle('system:exit', () => {
+    app.quit()
+    return { ok: true }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
