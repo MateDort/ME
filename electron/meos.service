@@ -1,0 +1,21 @@
+[Unit]
+Description=MEOS Electron Shell
+After=network.target graphical.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=NODE_ENV=production
+# Update USERNAME and project path to match your deployment
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/ME
+ExecStart=/usr/bin/env bash -lc 'npm run electron'
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical.target
+

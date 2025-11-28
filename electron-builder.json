@@ -1,0 +1,40 @@
+{
+  "appId": "com.meos.desktop",
+  "productName": "MEOS",
+  "directories": {
+    "output": "dist-electron",
+    "buildResources": "electron/resources"
+  },
+  "files": [
+    "app/**/*",
+    "components/**/*",
+    "lib/**/*",
+    "public/**/*",
+    ".next/**/*",
+    "electron/**/*",
+    "next.config.js",
+    "package.json"
+  ],
+  "mac": {
+    "target": [
+      "dmg"
+    ],
+    "category": "public.app-category.productivity"
+  },
+  "linux": {
+    "target": [
+      "AppImage"
+    ],
+    "category": "Utility",
+    "arch": [
+      "x64",
+      "arm64"
+    ]
+  },
+  "win": {
+    "target": [
+      "nsis"
+    ]
+  }
+}
+
