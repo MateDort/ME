@@ -7,6 +7,7 @@ import MusicPlayer from './apps/MusicPlayer'
 import GoogleSearch from './apps/GoogleSearch'
 import NewsApp from './apps/NewsApp'
 import CursorApp from './apps/CursorApp'
+import TerminalApp from './apps/TerminalApp'
 import HealthApp from './apps/HealthApp'
 import AppLauncher from './apps/AppLauncher'
 import LanguageApp from './apps/LanguageApp'
@@ -26,6 +27,7 @@ const componentMap: Record<string, React.ComponentType<any>> = {
   search: GoogleSearch,
   news: NewsApp,
   cursor: CursorApp,
+  terminal: TerminalApp,
   brainstorm: CursorApp, // legacy name for persisted windows
   health: HealthApp,
   launcher: AppLauncher,

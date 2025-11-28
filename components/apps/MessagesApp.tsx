@@ -103,6 +103,7 @@ export default function MessagesApp() {
       messages: { title: 'Messages', component: 'messages' },
       cursor: { title: 'Cursor', component: 'cursor' },
       brainstorm: { title: 'Cursor', component: 'cursor' },
+      terminal: { title: 'Terminal', component: 'terminal' },
       calendar: { title: 'Calendar', component: 'calendar' },
       maps: { title: 'Maps', component: 'maps' },
       news: { title: 'News', component: 'news' },
